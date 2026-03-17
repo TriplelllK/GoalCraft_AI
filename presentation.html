@@ -509,64 +509,75 @@
   </div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 16: ИНСТРУКЦИЯ ЗАПУСКА ═══════════════════════ -->
+<!-- ═══════════════════════ СЛАЙД 16: GITHUB + СКАЧИВАНИЕ ═══════════════════════ -->
 <section>
-  <h2>🚀 Инструкция по запуску</h2>
+  <h2>📥 Репозиторий на GitHub</h2>
   <div style="text-align:left; font-size:0.75em;">
-    <h3 style="margin-top:0;">Шаг 1: Установка зависимостей</h3>
-<pre><code>pip install -r requirements.txt</code></pre>
 
-    <h3>Шаг 2: (Опционально) Настроить LLM</h3>
-<pre><code># Windows PowerShell:
-$env:OPENAI_API_KEY = "sk-proj-ваш-ключ"
-
-# Linux / Mac:
-export OPENAI_API_KEY="sk-proj-ваш-ключ"</code></pre>
-    <div class="highlight-box" style="font-size:0.9em;">
-      💡 <b>Без ключа</b> проект полностью работает в rule-based режиме (graceful degradation).<br>
-      <b>С ключом</b> — генерация и переписывание через GPT-4o-mini.
+    <div class="highlight-box" style="font-size:1.1em; text-align:center; margin-bottom:15px;">
+      🔗 <b><a href="https://github.com/TriplelllK/GoalCraft_AI" target="_blank" style="color:#3b82f6;">
+        github.com/TriplelllK/GoalCraft_AI
+      </a></b>
     </div>
 
-    <h3>Шаг 3: Запуск сервера</h3>
+    <h3 style="margin-top:0;">Шаг 1: Скачать проект</h3>
+<pre><code># Вариант A: через Git
+git clone https://github.com/TriplelllK/GoalCraft_AI.git
+cd GoalCraft_AI
+
+# Вариант B: скачать ZIP с GitHub
+# → Code → Download ZIP → распаковать</code></pre>
+
+    <h3>Шаг 2: Установить зависимости</h3>
+<pre><code>pip install -r requirements.txt</code></pre>
+
+    <h3>Шаг 3: (Опционально) Настроить LLM</h3>
+<pre><code># Windows PowerShell:
+$env:OPENAI_API_KEY = "sk-proj-ваш-ключ"
+# Linux / Mac:
+export OPENAI_API_KEY="sk-proj-ваш-ключ"</code></pre>
+    <div class="highlight-box" style="font-size:0.85em;">
+      💡 <b>Без ключа OpenAI</b> — всё работает (rule-based режим). <b>С ключом</b> — генерация через GPT-4o-mini.
+    </div>
+
+    <h3>Шаг 4: Запуск</h3>
 <pre><code>cd backend_project
 uvicorn app.main:app --host 0.0.0.0 --port 8899</code></pre>
-
-    <h3>Шаг 4: Открыть Swagger UI</h3>
-    <p>👉 <b>http://localhost:8899/docs</b> — интерактивная документация API</p>
+    <p>👉 Swagger UI: <b>http://localhost:8899/docs</b></p>
   </div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 17: КАК ТЕСТИРОВАТЬ (Свои данные) ═══════════════════════ -->
+<!-- ═══════════════════════ СЛАЙД 17: ТЕСТИРОВАНИЕ СВОИМИ ДАННЫМИ ═══════════════════════ -->
 <section>
-  <h2>🧪 Как проверить со своими данными</h2>
-  <div style="text-align:left; font-size:0.72em;">
+  <h2>🧪 Как проверить своими данными</h2>
+  <div style="text-align:left; font-size:0.68em;">
 
-    <h3 style="margin-top:0;">1. Загрузите свои ВНД / стратегии</h3>
-    <p>Эндпоинт: <b>POST /api/v1/documents/ingest</b></p>
-<pre><code>{
-  "documents": [
-    {
-      "doc_id": "REAL-VND-01",
-      "doc_type": "vnd",
-      "title": "Ваш ВНД / стратегия компании",
-      "content": "Полный текст документа...",
-      "owner_department_id": "dep_hr",
-      "department_scope": ["dep_hr", "dep_ops"],
-      "keywords": ["ключевые", "слова"]
-    }
-  ]
-}</code></pre>
+    <h3 style="margin-top:0;">1️⃣ Загрузите свои ВНД / стратегии</h3>
+    <p>Откройте <b>http://localhost:8899/docs</b> → <b>POST /api/v1/documents/ingest</b> → Try it out:</p>
+<pre><code>{ "documents": [{
+    "doc_id": "MY-VND-01", "doc_type": "vnd",
+    "title": "Ваш реальный ВНД или стратегия",
+    "content": "Полный текст документа — скопируйте из Word/PDF...",
+    "owner_department_id": "dep_hr",
+    "department_scope": ["dep_hr", "dep_ops"],
+    "keywords": ["ваши", "ключевые", "слова"]
+}]}</code></pre>
+    <p style="color:#666;">📌 <i>doc_type</i>: <b>vnd</b> (ВНД), <b>strategy</b> (стратегия), <b>kpi</b> (KPI-фреймворк), <b>policy</b> (политика)</p>
 
-    <h3>2. Оцените реальные цели сотрудников</h3>
-    <p>Возьмите настоящие цели из вашей системы и отправьте в <b>POST /api/v1/goals/evaluate</b></p>
+    <h3>2️⃣ Оцените реальные цели сотрудников</h3>
+    <p><b>POST /api/v1/goals/evaluate</b> — вставьте реальную формулировку цели из вашей системы:</p>
+<pre><code>{ "employee_id": "emp_1", "goal_text": "Ваша реальная цель сотрудника...",
+  "quarter": "Q2", "year": 2026 }</code></pre>
 
-    <h3>3. Сгенерируйте цели для реальной должности</h3>
-    <p>Используйте <b>POST /api/v1/goals/generate</b> с указанием фокуса по вашим приоритетам</p>
+    <h3>3️⃣ Сгенерируйте цели для должности</h3>
+    <p><b>POST /api/v1/goals/generate</b> — укажите фокус по вашим приоритетам:</p>
+<pre><code>{ "employee_id": "emp_1", "quarter": "Q2", "year": 2026,
+  "count": 3, "focus": "ваш приоритет на квартал" }</code></pre>
 
-    <h3>4. Запустите автоматические тесты</h3>
-<pre><code>python qa/run_api_contract_tests.py     # 10 контрактных тестов
-python qa/quick_test.py                 # 11 эндпоинтов
-python qa/run_diagnostic_50.py          # 100 целей (50 bad + 50 good)</code></pre>
+    <h3>4️⃣ Запустите автоматические тесты</h3>
+<pre><code>cd backend_project
+python qa/run_api_contract_tests.py    # 10 контрактных тестов
+python qa/run_diagnostic_50.py         # 100 целей (50 bad + 50 good)</code></pre>
   </div>
 </section>
 
@@ -615,6 +626,7 @@ python qa/run_diagnostic_50.py          # 100 целей (50 bad + 50 good)</cod
   <br>
   <p style="color:#94a3b8; font-size:0.9em;">Спасибо за внимание!</p>
   <p style="color:#64748b; font-size:0.7em;">
+    GitHub: <a href="https://github.com/TriplelllK/GoalCraft_AI" target="_blank" style="color:#60a5fa;">github.com/TriplelllK/GoalCraft_AI</a><br>
     Swagger UI: <span style="color:#60a5fa;">http://localhost:8899/docs</span><br>
     Тесты: <span style="color:#60a5fa;">python qa/run_api_contract_tests.py</span>
   </p>
