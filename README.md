@@ -37,6 +37,7 @@
 | **F-12** | Генерация в SMART-формате, автоматическая переформулировка при score < 0.7 | ✅ |
 | **F-13** | Выбор целей из предложенного набора (UI-интерфейс) | ✅ |
 | **F-14** | Каскадирование целей от руководителя к подчинённым | ✅ |
+| **F-15** | Версионирование: история изменений целей (events + reviews) | ✅ |
 | **F-16** | Проверка количества целей (< 3 или > 5 — предупреждение) | ✅ |
 | **F-17** | Стратегическая связка: strategic / functional / operational + источник | ✅ |
 | **F-18** | Контроль веса целей (суммарный вес ≠ 100% → предупреждение) | ✅ |
@@ -80,6 +81,44 @@ doc_id, doc_type (strategy/vnd/kpi/policy/manager_goal),
 title, content, valid_from, valid_to, department_scope, keywords, version
 ```
 
+### Данные для хакатона (§4.2)
+
+Система готова принять `.sql` дамп от организаторов (PostgreSQL 17+ custom format).
+Все 13 таблиц из §4.2 поддерживаются:
+
+| Таблица | Записей (ТЗ) | Описание |
+|---------|-------------|----------|
+| departments | 8 | Подразделения |
+| positions | 25 | Должности и грейды |
+| employees | 450 | Сотрудники с иерархией |
+| documents | 160 | ВНД, стратегии, KPI-фреймворки |
+| goals | 9 000 | Цели сотрудников за все периоды |
+| projects | 34 | Проекты компании |
+| systems | 10 | ИТ-системы |
+| project_systems | 65 | Связь проект↔система |
+| employee_projects | 886 | Связь сотрудник↔проект (роль, %) |
+| goal_events | 30 789 | Журнал изменений целей (F-15) |
+| goal_reviews | 4 305 | Рецензии руководителей на цели |
+| kpi_catalog | 13 | Каталог KPI (название, единица) |
+| kpi_timeseries | 2 112 | Временные ряды KPI по подразделениям |
+
+**Загрузка дампа:**
+```bash
+# Вариант 1: Docker (автоматически при первом запуске)
+cp hackathon_dump.sql backend_project/data/
+docker compose up --build
+
+# Вариант 2: psql
+psql -U postgres -d hr_goal_ai -f hackathon_dump.sql
+
+# Вариант 3: Python-скрипт
+python scripts/load_dump.py hackathon_dump.sql
+
+# Проверка загрузки
+python scripts/load_dump.py --verify-only
+# Или через API: GET /api/v1/data/stats
+```
+
 ### Технический стек (§4.1)
 
 | Требование ТЗ | Наша реализация | Обоснование |
@@ -113,7 +152,8 @@ title, content, valid_from, valid_to, department_scope, keywords, version
 │  ┌────────────────────┴──────────────────────────────────────┐  │
 │  │                   API Router (routes.py)                   │  │
 │  │  /health  /evaluate  /generate  /rewrite  /batch          │  │
-│  │  /cascade  /dashboard  /maturity  /ingest  /context       │  │
+│  │  /cascade /dashboard /maturity /ingest /context            │  │
+│  │  /goals/{id}/history  /data/stats                         │  │
 │  └────────────────────┬──────────────────────────────────────┘  │
 │  ┌────────────────────┴──────────────────────────────────────┐  │
 │  │              GoalEngine (engine.py, 845+ lines)           │  │
@@ -167,6 +207,19 @@ title, content, valid_from, valid_to, department_scope, keywords, version
                     │  Response       │
                     └─────────────────┘
 ```
+
+---
+
+## 📊 Критерии оценки хакатона (§6)
+
+| Критерий | Вес | Наша реализация |
+|----------|-----|-----------------|
+| **Качество оценки целей** | 25% | SMART-scoring (rules.py: 300+ строк), стратегическая связка, тип цели, OKR-маппинг, 100% accuracy на 100 тестовых целей |
+| **Качество генерации целей** | 25% | RAG-пайплайн + GPT-4o-mini, привязка к ВНД/стратегии, авто-переформулировка при score < 0.7, каскадирование от руководителя |
+| **UX интерфейса** | 15% | React 18 SPA: Dashboard, Evaluate, Generate — наглядная обратная связь по каждому критерию |
+| **Качество RAG-пайплайна** | 15% | Векторный поиск (TF-IDF + cosine + keyword overlap), chunk-based retrieval, привязка к конкретному фрагменту ВНД |
+| **Архитектура и API** | 10% | FastAPI + Swagger, чистый код, DI-контейнер, абстракции Storage/Vector, Docker Compose |
+| **Аналитика и дашборд** | 10% | Дашборд по подразделениям и кварталам, индекс зрелости (F-22), распределение типов целей, стратегическая доля |
 
 ---
 
@@ -316,7 +369,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8899
 | `emp_4` | Saltanat B. | Recruiter | Recruitment & Staffing |
 | `emp_5` | Nurzhan T. | HR Analyst | HR / Production Block |
 
-### Доступные подразделения (8 шт. — соответствие ТЗ §4.2)
+### Доступные подразделения (8 шт.)
 
 | ID | Название |
 |----|----------|
@@ -341,7 +394,7 @@ cd backend_project
 # Контрактные тесты (10 тестов)
 python qa/run_api_contract_tests.py
 
-# Быстрый интеграционный тест (11 эндпоинтов)
+# Быстрый интеграционный тест (13 эндпоинтов)
 python qa/quick_test.py
 
 # Диагностический тест (100 целей: 50 bad + 50 good)
@@ -518,29 +571,33 @@ goalcraft-ai/
 ├── requirements.txt              # Python-зависимости
 ├── README.md                     # Документация
 ├── .env.example                  # Шаблон конфигурации (§10)
+├── data/                         # SQL-дамп организаторов (§4.2)
+│   └── README.md                 # Инструкция по загрузке дампа
+├── scripts/
+│   └── load_dump.py              # Загрузчик SQL-дампа (auto-verify)
 ├── backend_project/
 │   ├── .env.example              # Шаблон конфигурации
-│   ├── docker-compose.yml        # Docker orchestration
+│   ├── docker-compose.yml        # Docker orchestration (+ dump auto-import)
 │   ├── app/
 │   │   ├── main.py               # FastAPI entry point
 │   │   ├── container.py          # DI container
-│   │   ├── api/routes.py         # 11 REST endpoints
+│   │   ├── api/routes.py         # 13 REST endpoints
 │   │   ├── core/config.py        # Environment configuration
-│   │   ├── models/schemas.py     # Pydantic models (Goal §2.1, Document §2.2)
+│   │   ├── models/schemas.py     # Pydantic models (все 13 таблиц §4.2)
 │   │   ├── services/
-│   │   │   ├── engine.py         # GoalEngine (845+ lines)
+│   │   │   ├── engine.py         # GoalEngine (870+ lines)
 │   │   │   ├── rules.py          # SMART rules (300+ lines)
 │   │   │   └── llm.py            # OpenAI LLM (244 lines)
 │   │   ├── storage/
 │   │   │   ├── memory.py         # Demo: 8 depts, 6 employees, 10 docs, 18 goals
-│   │   │   └── postgres.py       # PostgreSQL production store
+│   │   │   └── postgres.py       # PostgreSQL store (13 таблиц §4.2)
 │   │   └── vector/
 │   │       ├── memory_vector.py  # In-memory vector search
 │   │       └── qdrant_vector.py  # Qdrant vector store
 │   ├── frontend/src/             # React 18 + TypeScript + Vite
 │   └── qa/
 │       ├── customer_test_scenarios.json  # 14 тестовых сценариев
-│       ├── quick_test.py                 # Быстрый тест (11 эндпоинтов)
+│       ├── quick_test.py                 # Быстрый тест (13 эндпоинтов)
 │       ├── run_api_contract_tests.py     # 10 контрактных тестов
 │       └── fixtures/                     # 100 тестовых целей
 ```

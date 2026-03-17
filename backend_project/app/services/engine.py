@@ -55,13 +55,39 @@ class GoalEngine:
         return self.vector_store.index_documents(self.store.list_documents())
 
     def health(self) -> HealthResponse:
+        # Count extended tables if available
+        goal_events_count = 0
+        goal_reviews_count = 0
+        kpi_count = 0
+        goals_count = 0
+        employees_count = 0
+        try:
+            goal_events_count = self.store.count_table_rows("goal_events")
+            goal_reviews_count = self.store.count_table_rows("goal_reviews")
+            kpi_count = self.store.count_table_rows("kpi_catalog")
+            goals_count = self.store.count_table_rows("goals")
+            employees_count = self.store.count_table_rows("employees")
+        except Exception:
+            pass
+
+        has_dump = False
+        try:
+            has_dump = self.store.has_dump_data()
+        except Exception:
+            pass
+
         return HealthResponse(
             status="ok",
-            mode="demo" if self.vector_store.backend_name == "memory" else "configured",
+            mode="hackathon-dump" if has_dump else ("demo" if self.vector_store.backend_name == "memory" else "configured"),
             vector_backend=self.vector_store.backend_name,
             indexed_documents=len(self.store.list_documents()),
             indexed_chunks=len(getattr(self.vector_store, "chunks", [])),
             llm_enabled=self.llm.is_enabled,
+            employees_count=employees_count,
+            goals_count=goals_count,
+            goal_events_count=goal_events_count,
+            goal_reviews_count=goal_reviews_count,
+            kpi_catalog_count=kpi_count,
         )
 
     def _build_source(self, chunk: Optional[ChunkRecord], query: str) -> Optional[SourceEvidence]:
@@ -408,6 +434,23 @@ class GoalEngine:
         dept = self.store.get_department(employee.department_id)
         manager = self.store.get_employee(employee.manager_id) if employee.manager_id else None
         retrieval_query = " ".join(filter(None, [position.name if position else "", dept.name if dept else "", focus or "", manager.full_name if manager else ""]))
+
+        # §4.2: Enrich retrieval query with KPI context if available
+        try:
+            kpis = self.store.get_kpi_for_department(employee.department_id)
+            if kpis:
+                retrieval_query += " " + " ".join(k.name for k in kpis[:5])
+        except Exception:
+            pass
+
+        # §4.2: Add employee project context
+        try:
+            projects = self.store.get_employee_projects(employee_id)
+            if projects:
+                retrieval_query += " " + " ".join(p.get("project_name", "") for p in projects[:3])
+        except Exception:
+            pass
+
         top_chunks = self.vector_store.search(retrieval_query, employee.department_id, top_k=max(count, 3))
 
         # Build RAG context from retrieved chunks
@@ -486,10 +529,15 @@ class GoalEngine:
             f"{deadline} повысить долю стратегически связанных целей сотрудников не ниже 80% на основе ВНД, KPI и целей руководителя.",
         ]
         results = []
-        for idx in range(count):
+        for idx in range(len(templates)):
+            if len(results) >= count:
+                break
             title = templates[idx % len(templates)]
             # §3.2.2 step 4: Skip if duplicate with existing goals
             if any(overlap_ratio(title, et) >= 0.65 for et in existing_titles):
+                continue
+            # Also skip if duplicate with already generated results
+            if any(overlap_ratio(title, r.title) >= 0.65 for r in results):
                 continue
             source_chunk = top_chunks[idx % len(top_chunks)] if top_chunks else None
             eval_result = self.evaluate_goal(employee_id, title, quarter, year)
@@ -640,12 +688,34 @@ class GoalEngine:
         department = self.store.get_department(employee.department_id)
         position = self.store.get_position(employee.position_id)
         manager = self.store.get_employee(employee.manager_id) if employee.manager_id else None
+
+        # §4.2 extended context
+        projects: list[dict] = []
+        department_kpis: list[dict] = []
+        goal_history_stats: dict = {}
+        try:
+            projects = self.store.get_employee_projects(employee_id)
+        except Exception:
+            pass
+        try:
+            kpis = self.store.get_kpi_for_department(employee.department_id)
+            department_kpis = [{"id": k.id, "name": k.name, "unit": k.unit, "description": k.description} for k in kpis]
+        except Exception:
+            pass
+        try:
+            goal_history_stats = self.store.get_goal_history_stats(employee_id)
+        except Exception:
+            pass
+
         return EmployeeContextResponse(
             employee=employee,
             department=department,
             position=position,
             manager=manager,
             active_goals=self.store.list_employee_goals(employee_id, quarter, year),
+            projects=projects,
+            department_kpis=department_kpis,
+            goal_history_stats=goal_history_stats,
         )
 
     def ingest_documents(self, documents) -> IngestDocumentsResponse:

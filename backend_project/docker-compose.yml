@@ -8,6 +8,8 @@ services:
     depends_on:
       - postgres
       - qdrant
+    volumes:
+      - ./data:/app/data  # Place organizer's .sql dump here
   postgres:
     image: postgres:17
     environment:
@@ -18,6 +20,7 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+      - ./data:/docker-entrypoint-initdb.d  # Auto-load .sql dumps on first start
   qdrant:
     image: qdrant/qdrant:latest
     ports:

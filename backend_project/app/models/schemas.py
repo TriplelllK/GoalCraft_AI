@@ -68,6 +68,68 @@ class Goal(BaseModel):
     updated_at: str = ""
 
 
+# ── §4.2 Extended data models (hackathon dump) ──────────────────────
+
+
+class Project(BaseModel):
+    id: str
+    name: str
+    status: str = "active"
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+
+
+class System(BaseModel):
+    id: str
+    name: str
+    system_type: str = ""
+
+
+class EmployeeProject(BaseModel):
+    employee_id: str
+    project_id: str
+    role: str = ""
+    allocation_percent: float = 0.0
+    start_date: Optional[date] = None
+    end_date: Optional[date] = None
+
+
+class GoalEvent(BaseModel):
+    id: str
+    goal_id: str
+    event_type: str = ""
+    actor_id: str = ""
+    old_status: str = ""
+    new_status: str = ""
+    old_text: str = ""
+    new_text: str = ""
+    metadata: str = ""
+    created_at: str = ""
+
+
+class GoalReview(BaseModel):
+    id: str
+    goal_id: str
+    reviewer_id: str = ""
+    verdict: str = ""
+    created_at: str = ""
+
+
+class KpiCatalog(BaseModel):
+    id: str
+    name: str
+    unit: str = ""
+    description: str = ""
+
+
+class KpiTimeseries(BaseModel):
+    id: str
+    kpi_id: str
+    department_id: str = ""
+    period: str = ""
+    value: float = 0.0
+
+
 # ── Request schemas ──────────────────────────────────────────────────
 
 
@@ -118,6 +180,11 @@ class HealthResponse(BaseModel):
     indexed_documents: int = 0
     indexed_chunks: int = 0
     llm_enabled: bool = False
+    employees_count: int = 0
+    goals_count: int = 0
+    goal_events_count: int = 0
+    goal_reviews_count: int = 0
+    kpi_catalog_count: int = 0
 
 
 class SmartBreakdown(BaseModel):
@@ -214,6 +281,9 @@ class EmployeeContextResponse(BaseModel):
     position: Optional[Position] = None
     manager: Optional[Employee] = None
     active_goals: list[Goal] = Field(default_factory=list)
+    projects: list[dict] = Field(default_factory=list)
+    department_kpis: list[dict] = Field(default_factory=list)
+    goal_history_stats: dict = Field(default_factory=dict)
 
 
 class IngestDocumentsResponse(BaseModel):

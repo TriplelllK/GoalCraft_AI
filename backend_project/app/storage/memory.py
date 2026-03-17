@@ -5,7 +5,10 @@ from __future__ import annotations
 from datetime import date
 from typing import Optional
 
-from app.models.schemas import Department, Document, Employee, Goal, Position
+from app.models.schemas import (
+    Department, Document, Employee, Goal, Position,
+    GoalEvent, GoalReview, KpiCatalog, KpiTimeseries,
+)
 
 
 class MemoryStore:
@@ -17,6 +20,12 @@ class MemoryStore:
         self.employees: dict[str, Employee] = {}
         self._documents: dict[str, Document] = {}
         self._goals: list[Goal] = []
+        # §4.2 extended tables
+        self._goal_events: list[GoalEvent] = []
+        self._goal_reviews: list[GoalReview] = []
+        self._kpi_catalog: dict[str, KpiCatalog] = {}
+        self._kpi_timeseries: list[KpiTimeseries] = []
+        self._employee_projects: list[dict] = []
         self._seed_demo()
 
     # ── Seed ─────────────────────────────────────────────────────────
@@ -398,3 +407,53 @@ class MemoryStore:
         if exclude_quarter and exclude_year:
             goals = [g for g in goals if not (g.quarter == exclude_quarter and g.year == exclude_year)]
         return goals
+
+    # ── §4.2 Extended table queries ──────────────────────────────────
+
+    def list_goal_events(self, goal_id: str) -> list[GoalEvent]:
+        """Return goal_events for a specific goal (F-15 versioning)."""
+        return [e for e in self._goal_events if e.goal_id == goal_id]
+
+    def list_goal_reviews(self, goal_id: str) -> list[GoalReview]:
+        """Return goal_reviews for a specific goal."""
+        return [r for r in self._goal_reviews if r.goal_id == goal_id]
+
+    def get_kpi_for_department(self, department_id: str) -> list[KpiCatalog]:
+        """Return KPI catalog items that have timeseries data for this department."""
+        kpi_ids = {ts.kpi_id for ts in self._kpi_timeseries if ts.department_id == department_id}
+        return [self._kpi_catalog[k] for k in kpi_ids if k in self._kpi_catalog]
+
+    def get_kpi_timeseries(self, kpi_id: str, department_id: str) -> list[KpiTimeseries]:
+        """Return timeseries values for a specific KPI in a department."""
+        return [ts for ts in self._kpi_timeseries if ts.kpi_id == kpi_id and ts.department_id == department_id]
+
+    def get_employee_projects(self, employee_id: str) -> list[dict]:
+        """Return projects the employee is involved in."""
+        return [ep for ep in self._employee_projects if ep.get("employee_id") == employee_id]
+
+    def get_goal_history_stats(self, employee_id: str) -> dict:
+        """Return aggregated goal history: how many goals approved/rejected/drafted."""
+        stats: dict[str, int] = {}
+        for g in self._goals:
+            if g.employee_id == employee_id:
+                stats[g.status] = stats.get(g.status, 0) + 1
+        return stats
+
+    def count_table_rows(self, table_name: str) -> int:
+        """Return row count for a given logical table."""
+        mapping = {
+            "departments": len(self.departments),
+            "positions": len(self.positions),
+            "employees": len(self.employees),
+            "documents": len(self._documents),
+            "goals": len(self._goals),
+            "goal_events": len(self._goal_events),
+            "goal_reviews": len(self._goal_reviews),
+            "kpi_catalog": len(self._kpi_catalog),
+            "kpi_timeseries": len(self._kpi_timeseries),
+        }
+        return mapping.get(table_name, 0)
+
+    def has_dump_data(self) -> bool:
+        """Check if we have significant data loaded (from organizer dump)."""
+        return len(self.employees) > 50

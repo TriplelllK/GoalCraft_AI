@@ -136,3 +136,43 @@ async def department_maturity(
         return ctx.engine.maturity_report(department_id, quarter, year)
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+# ── F-15: Goal history / versioning ─────────────────────────────────
+
+
+@router.get("/api/v1/goals/{goal_id}/history", tags=["goals"])
+async def goal_history(goal_id: str, ctx: AppContainer = Depends(get_container)):
+    """Return change history for a goal (events + reviews). §3.2.1 F-15."""
+    try:
+        events = ctx.engine.store.list_goal_events(goal_id)
+        reviews = ctx.engine.store.list_goal_reviews(goal_id)
+        return {
+            "goal_id": goal_id,
+            "events": [e.model_dump() for e in events],
+            "reviews": [r.model_dump() for r in reviews],
+            "total_events": len(events),
+            "total_reviews": len(reviews),
+        }
+    except Exception as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+# ── §4.2: Data stats endpoint ───────────────────────────────────────
+
+
+@router.get("/api/v1/data/stats", tags=["system"])
+async def data_stats(ctx: AppContainer = Depends(get_container)):
+    """Return counts for all tables — useful for verifying dump load."""
+    tables = [
+        "departments", "positions", "employees", "documents", "goals",
+        "goal_events", "goal_reviews", "kpi_catalog", "kpi_timeseries",
+    ]
+    stats = {}
+    for t in tables:
+        try:
+            stats[t] = ctx.engine.store.count_table_rows(t)
+        except Exception:
+            stats[t] = 0
+    stats["has_dump_data"] = any(stats.get(k, 0) > 50 for k in ["employees", "goals"])
+    return stats
