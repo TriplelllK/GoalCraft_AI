@@ -1,0 +1,21 @@
+[
+  {
+    "name": "hr_department_maturity",
+    "request": {
+      "department_id": "dep_hr",
+      "quarter": "Q2",
+      "year": 2026
+    },
+    "expect": {
+      "maturity_index_min": 0.3,
+      "total_employees_min": 1,
+      "employees_with_goals_min": 1,
+      "total_goals_min": 2,
+      "has_smart_distribution": true,
+      "has_goal_type_distribution": true,
+      "has_alignment_distribution": true,
+      "has_weakest_criteria": true,
+      "has_recommendations": true
+    }
+  }
+]

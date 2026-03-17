@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GoalCraft AI — Презентация</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+<style>
+  :root {
+    --r-heading-color: #1a1a2e;
+    --r-main-color: #333;
+    --r-link-color: #16213e;
+  }
+  .reveal { font-size: 28px; }
+  .reveal h1 { font-size: 2.2em; color: #1a1a2e; }
+  .reveal h2 { font-size: 1.6em; color: #16213e; border-bottom: 3px solid #0f3460; padding-bottom: 10px; }
+  .reveal h3 { font-size: 1.2em; color: #0f3460; }
+  .reveal table { font-size: 0.65em; margin: 0 auto; border-collapse: collapse; }
+  .reveal table th { background: #0f3460; color: white; padding: 8px 14px; }
+  .reveal table td { padding: 6px 14px; border: 1px solid #ddd; }
+  .reveal table tr:nth-child(even) { background: #f0f4ff; }
+  .reveal pre { font-size: 0.55em; width: 95%; }
+  .reveal code { font-family: 'Cascadia Code', 'Fira Code', monospace; }
+  .reveal .emoji { font-size: 1.3em; }
+  .reveal ul { font-size: 0.85em; }
+  .reveal li { margin-bottom: 8px; }
+  .badge-green { background: #22c55e; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; }
+  .badge-blue { background: #3b82f6; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; }
+  .badge-orange { background: #f59e0b; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; }
+  .big-number { font-size: 3em; font-weight: bold; color: #0f3460; }
+  .metric-card {
+    display: inline-block; background: #f0f4ff; border-radius: 16px;
+    padding: 20px 30px; margin: 10px; text-align: center;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08); min-width: 160px;
+  }
+  .metric-card .value { font-size: 2.2em; font-weight: bold; color: #0f3460; }
+  .metric-card .label { font-size: 0.7em; color: #666; margin-top: 5px; }
+  .arch-box {
+    background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px;
+    padding: 15px; margin: 8px; display: inline-block; min-width: 200px;
+  }
+  .problem-card {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-radius: 12px; padding: 20px; margin: 10px 0;
+    border-left: 5px solid #dc2626;
+  }
+  .solution-card {
+    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+    border-radius: 12px; padding: 20px; margin: 10px 0;
+    border-left: 5px solid #16a34a;
+  }
+  .slide-title-page {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
+    color: white !important;
+  }
+  .slide-title-page h1, .slide-title-page h2, .slide-title-page h3, .slide-title-page p {
+    color: white !important;
+  }
+  .flow-step {
+    display: inline-block; background: #eff6ff; border: 2px solid #3b82f6;
+    border-radius: 10px; padding: 10px 16px; margin: 5px; font-size: 0.75em;
+  }
+  .flow-arrow { font-size: 1.5em; color: #3b82f6; vertical-align: middle; }
+  .check { color: #16a34a; font-weight: bold; }
+  .cross { color: #dc2626; font-weight: bold; }
+  .highlight-box {
+    background: #eff6ff; border: 2px solid #3b82f6; border-radius: 12px;
+    padding: 15px 20px; margin: 10px 0;
+  }
+  .two-col { display: flex; gap: 30px; align-items: flex-start; }
+  .two-col > div { flex: 1; }
+  .reveal .slides section { padding: 20px; }
+</style>
+</head>
+<body>
+<div class="reveal">
+<div class="slides">
+
+<!-- ═══════════════════════ ТИТУЛЬНЫЙ СЛАЙД ═══════════════════════ -->
+<section data-background="linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)">
+  <h1 style="color:white; font-size:2.5em;">🎯 GoalCraft AI</h1>
+  <h3 style="color:#93c5fd;">HR Performance Management Platform</h3>
+  <p style="color:#cbd5e1; font-size:0.9em; margin-top: 30px;">
+    Интеллектуальная платформа для оценки, генерации и управления<br>
+    рабочими целями сотрудников по методологии <strong style="color:#60a5fa;">SMART + OKR</strong>
+  </p>
+  <br>
+  <p style="color:#64748b; font-size:0.7em;">
+    Хакатон «Внедрение ИИ в HR-процессы» • 2026
+  </p>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 2: ПРОБЛЕМА ═══════════════════════ -->
+<section>
+  <h2>📌 Проблема</h2>
+  <div class="problem-card" style="text-align:left;">
+    <strong>Постановка целей в крупных компаниях — хаотичный процесс:</strong>
+    <ul style="margin-top:12px; font-size:0.85em;">
+      <li>Руководители формулируют цели <b>размыто</b> — «улучшить работу отдела», «повысить эффективность»</li>
+      <li>Нет <b>объективной оценки</b> качества целей — каждый HR судит субъективно</li>
+      <li>Цели <b>не связаны</b> со стратегией компании и внутренними нормативными документами (ВНД)</li>
+      <li>Нет <b>каскадирования</b> — цели руководителя не декомпозируются на подчинённых</li>
+      <li><b>Дублирование</b> целей между сотрудниками и кварталами</li>
+      <li>Нет <b>аналитики</b> по подразделениям — непонятно, кто ставит хорошие цели, а кто нет</li>
+    </ul>
+  </div>
+  <div class="highlight-box" style="font-size:0.8em; margin-top:15px;">
+    💡 <b>Масштаб:</b> ~450 сотрудников, ~8 подразделений, ~9 000 целей в год
+  </div>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 3: РЕШЕНИЕ ═══════════════════════ -->
+<section>
+  <h2>💡 Наше решение</h2>
+  <div class="solution-card" style="text-align:left;">
+    <strong>GoalCraft AI — гибридная AI-система:</strong>
+    <ul style="margin-top:12px; font-size:0.85em;">
+      <li><b>Автоматическая SMART-оценка</b> любой цели за секунду (score 0.0 – 1.0)</li>
+      <li><b>AI-генерация</b> 3–5 целей для конкретной должности с привязкой к ВНД</li>
+      <li><b>Переформулировка</b> слабых целей в SMART-совместимые</li>
+      <li><b>OKR-маппинг</b> — привязка целей к Objectives & Key Results</li>
+      <li><b>Каскадирование</b> от руководителя ко всем подчинённым</li>
+      <li><b>Аналитика</b> — дашборд качества целей по подразделениям + индекс зрелости</li>
+    </ul>
+  </div>
+  <p style="font-size:0.8em; color:#666; margin-top:15px;">
+    Гибридный подход: <span class="badge-blue">Детерминированные правила</span> +
+    <span class="badge-green">LLM (GPT-4o-mini)</span> с graceful degradation
+  </p>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 4: АРХИТЕКТУРА ═══════════════════════ -->
+<section>
+  <h2>🏗️ Архитектура системы</h2>
+  <div style="font-size:0.6em; line-height:1.6;">
+<pre style="background:#f8fafc; text-align:left; padding:15px; border-radius:10px; font-size:1.1em;"><code>
+┌────────────────────────────────────────────────────────┐
+│          React 18 + TypeScript + Vite (SPA)            │
+│   Dashboard  │  Evaluate  │  Generate                  │
+└──────────────────────┬─────────────────────────────────┘
+                       │ HTTP REST API (JSON)
+┌──────────────────────┼─────────────────────────────────┐
+│              FastAPI Backend (Python)                    │
+│  ┌───────────────────┴──────────────────────────────┐  │
+│  │            API Router (11 endpoints)              │  │
+│  └───────────────────┬──────────────────────────────┘  │
+│  ┌───────────────────┴──────────────────────────────┐  │
+│  │          GoalEngine (845+ строк)                  │  │
+│  │  ┌────────────┐ ┌───────────┐ ┌──────────────┐   │  │
+│  │  │SMART Rules │ │LLM Service│ │RAG / Вектор- │   │  │
+│  │  │(rules.py)  │ │(llm.py)   │ │ный поиск     │   │  │
+│  │  │Deterministic│ │GPT-4o-mini│ │по ВНД        │   │  │
+│  │  └────────────┘ └───────────┘ └──────────────┘   │  │
+│  └──────────────────────────────────────────────────┘  │
+│  ┌──────────────────┐  ┌───────────────────────────┐   │
+│  │  Storage Layer   │  │    Vector Store Layer      │   │
+│  │ Memory / Postgres│  │    Memory / Qdrant         │   │
+│  └──────────────────┘  └───────────────────────────┘   │
+└────────────────────────────────────────────────────────┘
+</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 5: ТЕХНИЧЕСКИЙ СТЕК ═══════════════════════ -->
+<section>
+  <h2>⚙️ Технический стек</h2>
+  <table>
+    <thead>
+      <tr><th>Компонент</th><th>Технология</th><th>Обоснование</th></tr>
+    </thead>
+    <tbody>
+      <tr><td><b>Backend</b></td><td>FastAPI (Python 3.11+)</td><td>Async, Swagger автодокументация, type-safe</td></tr>
+      <tr><td><b>Frontend</b></td><td>React 18 + TypeScript + Vite</td><td>SPA: Dashboard, Evaluate, Generate</td></tr>
+      <tr><td><b>AI / LLM</b></td><td>OpenAI GPT-4o-mini</td><td>Высокое качество генерации на русском языке</td></tr>
+      <tr><td><b>SMART-оценка</b></td><td>Rule-based engine (300+ строк)</td><td>Детерминированный, 100% воспроизводимый</td></tr>
+      <tr><td><b>БД (prod)</b></td><td>PostgreSQL 17</td><td>Production-ready, Docker Compose</td></tr>
+      <tr><td><b>Вектор. хранилище</b></td><td>Qdrant</td><td>REST API, Docker, RAG-поиск по ВНД</td></tr>
+      <tr><td><b>Контейнеризация</b></td><td>Docker + Docker Compose</td><td>Одна команда для запуска всего стека</td></tr>
+      <tr><td><b>Методология</b></td><td>SMART + OKR (комбинированная)</td><td>Полнота покрытия: оценка + стратег. привязка</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 6: ГИБРИДНЫЙ ПОДХОД ═══════════════════════ -->
+<section>
+  <h2>🧠 Гибридный подход</h2>
+  <div class="two-col">
+    <div>
+      <div class="arch-box" style="border-color:#3b82f6; width:90%;">
+        <h3 style="color:#3b82f6; margin-top:0;">📐 Rule-based модуль</h3>
+        <ul style="font-size:0.75em; text-align:left;">
+          <li><b>SMART-оценка</b> по 5 критериям</li>
+          <li>40+ глаголов действия</li>
+          <li>60+ объектов HR-домена</li>
+          <li>Regex-паттерны для метрик и дат</li>
+          <li>100% воспроизводимость</li>
+          <li><b>Всегда доступен</b></li>
+        </ul>
+      </div>
+    </div>
+    <div>
+      <div class="arch-box" style="border-color:#22c55e; width:90%;">
+        <h3 style="color:#22c55e; margin-top:0;">🤖 LLM модуль</h3>
+        <ul style="font-size:0.75em; text-align:left;">
+          <li><b>Генерация</b> целей по контексту</li>
+          <li><b>Переписывание</b> слабых целей</li>
+          <li><b>OKR-маппинг</b> (Objectives + KRs)</li>
+          <li>GPT-4o-mini (OpenAI API)</li>
+          <li><b>Graceful degradation:</b><br>нет ключа → fallback на правила</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div class="highlight-box" style="font-size:0.75em; margin-top:15px;">
+    ✅ Система полностью работоспособна <b>без LLM</b> (rule-based) и <b>с LLM</b> (расширенный режим)
+  </div>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 7: API ЭНДПОИНТЫ ═══════════════════════ -->
+<section>
+  <h2>🔌 API: 11 эндпоинтов</h2>
+  <table>
+    <thead>
+      <tr><th>Метод</th><th>Эндпоинт</th><th>Функция</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>GET</td><td>/health</td><td>Статус, режим, LLM, кол-во документов</td></tr>
+      <tr><td>POST</td><td>/api/v1/goals/evaluate</td><td>SMART-оценка одной цели</td></tr>
+      <tr><td>POST</td><td>/api/v1/goals/rewrite</td><td>Переформулировка слабой цели</td></tr>
+      <tr><td>POST</td><td>/api/v1/goals/generate</td><td>Генерация 3–5 целей по должности</td></tr>
+      <tr><td>POST</td><td>/api/v1/goals/evaluate-batch</td><td>Пакетная оценка за квартал</td></tr>
+      <tr><td>POST</td><td>/api/v1/goals/cascade</td><td>Каскадирование от руководителя</td></tr>
+      <tr><td>GET</td><td>/api/v1/dashboard/overview</td><td>Дашборд по всем подразделениям</td></tr>
+      <tr><td>GET</td><td>/api/v1/dashboard/{id}</td><td>Детали одного подразделения</td></tr>
+      <tr><td>GET</td><td>/api/v1/dashboard/{id}/maturity</td><td>Индекс зрелости</td></tr>
+      <tr><td>POST</td><td>/api/v1/documents/ingest</td><td>Загрузка ВНД / стратегий</td></tr>
+      <tr><td>GET</td><td>/api/v1/employees/{id}/context</td><td>Контекст сотрудника</td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 8: СООТВЕТСТВИЕ ТЗ (A) ═══════════════════════ -->
+<section>
+  <h2>📋 Соответствие ТЗ: Компонент A</h2>
+  <h3>AI-оценка качества целей (§3.1)</h3>
+  <table>
+    <thead>
+      <tr><th>Требование ТЗ</th><th>Реализация</th><th>Статус</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SMART-оценка по 5 критериям (S/M/A/R/T)</td><td>40+ глаголов, 60+ объектов, regex-паттерны</td><td><span class="check">✅</span></td></tr>
+      <tr><td>Итоговый индекс (Float 0.0–1.0)</td><td>overall_score — среднее 5 SMART-критериев</td><td><span class="check">✅</span></td></tr>
+      <tr><td>Рекомендации (Text список)</td><td>Контекстные рекомендации по слабым критериям</td><td><span class="check">✅</span></td></tr>
+      <tr><td>Переформулировка AI</td><td>LLM-переписывание + rule-based fallback</td><td><span class="check">✅</span></td></tr>
+      <tr><td>Методология SMART + альтернативные</td><td>SMART + OKR (Objectives & Key Results)</td><td><span class="check">✅</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 9: СООТВЕТСТВИЕ ТЗ (B) ═══════════════════════ -->
+<section>
+  <h2>📋 Соответствие ТЗ: Компонент B</h2>
+  <h3>AI-генерация целей (§3.2)</h3>
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Функция</th><th>Статус</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>F-09</td><td>Генерация по должности, подразделению и ВНД</td><td><span class="check">✅</span></td></tr>
+      <tr><td>F-10</td><td>Привязка к ВНД / стратегическому документу</td><td><span class="check">✅</span></td></tr>
+      <tr><td>F-11</td><td>Настройка фокус-направления (приоритеты квартала)</td><td><span class="check">✅</span></td></tr>
+      <tr><td>F-12</td><td>Генерация в SMART-формате, авто-рефомулировка при &lt; 0.7</td><td><span class="check">✅</span></td></tr>
+      <tr><td>F-14</td><td>Каскадирование от руководителя к подчинённым</td><td><span class="check">✅</span></td></tr>
+      <tr><td>F-16</td><td>Проверка кол-ва целей (&lt; 3 / &gt; 5 — предупреждение)</td><td><span class="check">✅</span></td></tr>
+      <tr><td>F-17</td><td>Стратегическая связка: strategic / functional / operational</td><td><span class="check">✅</span></td></tr>
+      <tr><td>F-18</td><td>Контроль веса целей (≠ 100% → предупреждение)</td><td><span class="check">✅</span></td></tr>
+      <tr><td>F-19</td><td>Тип: activity-based / output-based / impact-based</td><td><span class="check">✅</span></td></tr>
+      <tr><td>F-20</td><td>Проверка достижимости по историческим данным</td><td><span class="check">✅</span></td></tr>
+      <tr><td>F-21</td><td>Проверка дублирования целей</td><td><span class="check">✅</span></td></tr>
+      <tr><td>F-22</td><td>Индекс зрелости подразделения</td><td><span class="check">✅</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 10: MVP ═══════════════════════ -->
+<section>
+  <h2>📋 MVP — Все обязательные функции (§8)</h2>
+  <table>
+    <thead>
+      <tr><th>MVP-функция</th><th>Обязательно</th><th>Статус</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>SMART-оценка одной цели через API</td><td>✅ Да</td><td><span class="check">✅ Готово</span></td></tr>
+      <tr><td>Переформулировка слабой цели</td><td>✅ Да</td><td><span class="check">✅ Готово</span></td></tr>
+      <tr><td>Генерация 3–5 целей по должности</td><td>✅ Да</td><td><span class="check">✅ Готово</span></td></tr>
+      <tr><td>Привязка к источнику ВНД</td><td>✅ Да</td><td><span class="check">✅ Готово</span></td></tr>
+      <tr><td>Пакетная оценка за квартал</td><td>✅ Да</td><td><span class="check">✅ Готово</span></td></tr>
+      <tr><td>Дашборд качества по подразделениям</td><td>✅ Да</td><td><span class="check">✅ Готово</span></td></tr>
+      <tr><td>Каскадирование от руководителя</td><td>⭕ Опционально</td><td><span class="check">✅ Бонус</span></td></tr>
+    </tbody>
+  </table>
+  <div class="highlight-box" style="font-size:0.8em; margin-top:15px;">
+    ✅ <b>100% обязательных</b> MVP-функций реализовано + 1 опциональная (каскадирование)
+  </div>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 11: РЕЗУЛЬТАТЫ ТЕСТОВ (МЕТРИКИ) ═══════════════════════ -->
+<section>
+  <h2>📊 Результаты тестирования</h2>
+  <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px;">
+    <div class="metric-card">
+      <div class="value" style="color:#16a34a;">100%</div>
+      <div class="label">Точность SMART-оценки<br>(100 целей: 50 bad + 50 good)</div>
+    </div>
+    <div class="metric-card">
+      <div class="value" style="color:#16a34a;">10/10</div>
+      <div class="label">API контрактных<br>тестов</div>
+    </div>
+    <div class="metric-card">
+      <div class="value" style="color:#16a34a;">23/23</div>
+      <div class="label">LLM интеграционных<br>тестов</div>
+    </div>
+    <div class="metric-card">
+      <div class="value" style="color:#0f3460;">0</div>
+      <div class="label">False Positives /<br>False Negatives</div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 12: ДЕТАЛИ ТЕСТОВ ═══════════════════════ -->
+<section>
+  <h2>📊 Диагностический тест: детали</h2>
+  <div class="two-col">
+    <div>
+      <table>
+        <thead>
+          <tr><th>Метрика</th><th>Значение</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Общая точность</td><td><b style="color:#16a34a;">100.0%</b></td></tr>
+          <tr><td>Плохие цели (< 0.5)</td><td>50/50 ✅</td></tr>
+          <tr><td>Хорошие цели (≥ 0.5)</td><td>50/50 ✅</td></tr>
+          <tr><td>Средний score плохих</td><td>0.408</td></tr>
+          <tr><td>Средний score хороших</td><td>0.860</td></tr>
+          <tr><td>Разделение (gap)</td><td><b>0.452</b></td></tr>
+          <tr><td>False Positives</td><td>0</td></tr>
+          <tr><td>False Negatives</td><td>0</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3 style="margin-top:0;">Примеры оценок:</h3>
+      <div style="text-align:left; font-size:0.7em;">
+        <div class="problem-card" style="padding:10px;">
+          ❌ «Улучшить работу отдела»<br>
+          <b>Score: 0.42</b> — размыто, нет метрик, нет срока
+        </div>
+        <div class="solution-card" style="padding:10px;">
+          ✅ «До 30.06 сократить срок согласования HR-заявок с 5 до 3 дней»<br>
+          <b>Score: 0.87</b> — конкретно, измеримо, есть дедлайн
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 13: ПРИМЕРЫ РАБОТЫ ═══════════════════════ -->
+<section>
+  <h2>🔍 Примеры работы системы</h2>
+  <h3>Оценка + генерация</h3>
+  <div class="two-col" style="font-size:0.7em;">
+    <div style="text-align:left;">
+      <b>Вход — оценка цели:</b>
+<pre><code>{
+  "employee_id": "emp_1",
+  "goal_text": "Улучшить работу отдела",
+  "quarter": "Q2",
+  "year": 2026
+}</code></pre>
+      <b>Выход:</b>
+<pre><code>{
+  "overall_score": 0.42,
+  "alignment_level": "functional",
+  "goal_type": "activity-based",
+  "recommendations": [
+    "Добавьте числовые KPI...",
+    "Укажите конкретный срок..."
+  ],
+  "rewrite": "До 30.06.2026 повысить
+    удовлетворённость внутренних
+    клиентов HR-сервиса до 85%..."
+}</code></pre>
+    </div>
+    <div style="text-align:left;">
+      <b>Генерация для рекрутера:</b>
+<pre><code>{
+  "employee_id": "emp_4",
+  "quarter": "Q2", "year": 2026,
+  "count": 3,
+  "focus": "подбор и адаптация"
+}</code></pre>
+      <b>Результат (3 цели):</b>
+<pre><code>[
+  {
+    "title": "До 30.06.2026 сократить
+      средний срок закрытия вакансий
+      с 45 до 30 рабочих дней",
+    "score": 0.88,
+    "alignment_level": "strategic",
+    "goal_type": "impact-based",
+    "source": { "doc_id": "DOC-06",
+      "title": "Политика подбора" }
+  },
+  ...
+]</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 14: BATCH + ДАШБОРД ═══════════════════════ -->
+<section>
+  <h2>🔍 Пакетная оценка и аналитика</h2>
+  <div class="two-col" style="font-size:0.7em;">
+    <div style="text-align:left;">
+      <b>Пакетная оценка (batch):</b>
+<pre><code>{
+  "average_smart_index": 0.88,
+  "alerts": [
+    "У сотрудника менее 3 целей"
+  ],
+  "weight_check": {
+    "total_weight": 100.0,
+    "is_balanced": true
+  }
+}
+
+// При дублировании:
+{
+  "average_smart_index": 0.42,
+  "alerts": [
+    "Менее 3 целей на квартал",
+    "Суммарный вес ≠ 100%",
+    "Дублирующихся целей: 1"
+  ]
+}</code></pre>
+    </div>
+    <div style="text-align:left;">
+      <b>Индекс зрелости (F-22):</b>
+<pre><code>{
+  "maturity_index": 0.72,
+  "maturity_level": "зрелый",
+  "total_goals": 5,
+  "recommendations": [
+    "Слабый критерий «достижимость»
+     (средний: 0.65). Обратите
+     внимание при постановке целей."
+  ]
+}
+
+// Уровни зрелости:
+// 0.0-0.3 → начальный
+// 0.3-0.5 → развивающийся
+// 0.5-0.7 → зрелый
+// 0.7-1.0 → продвинутый</code></pre>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 15: ДЕМО ДАННЫЕ ═══════════════════════ -->
+<section>
+  <h2>🗃️ Демо-данные</h2>
+  <div class="two-col">
+    <div>
+      <h3 style="margin-top:0;">Сотрудники (6)</h3>
+      <table style="font-size:0.85em;">
+        <thead>
+          <tr><th>ID</th><th>Имя</th><th>Должность</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>emp_mgr</td><td>Aidos S.</td><td>Manager</td></tr>
+          <tr><td>emp_1</td><td>Aigerim S.</td><td>HRBP</td></tr>
+          <tr><td>emp_2</td><td>Dana M.</td><td>L&D Specialist</td></tr>
+          <tr><td>emp_3</td><td>Marat K.</td><td>C&B Specialist</td></tr>
+          <tr><td>emp_4</td><td>Saltanat B.</td><td>Recruiter</td></tr>
+          <tr><td>emp_5</td><td>Nurzhan T.</td><td>HR Analyst</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div>
+      <h3 style="margin-top:0;">Подразделения (8)</h3>
+      <table style="font-size:0.85em;">
+        <thead>
+          <tr><th>ID</th><th>Название</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>dep_hr</td><td>HR / Production Block</td></tr>
+          <tr><td>dep_lnd</td><td>Learning & Development</td></tr>
+          <tr><td>dep_ops</td><td>Production Operations</td></tr>
+          <tr><td>dep_comp</td><td>Compensation & Benefits</td></tr>
+          <tr><td>dep_rec</td><td>Recruitment & Staffing</td></tr>
+          <tr><td>dep_fin</td><td>Finance & Budgeting</td></tr>
+          <tr><td>dep_it</td><td>IT & Digital</td></tr>
+          <tr><td>dep_legal</td><td>Legal & Compliance</td></tr>
+        </tbody>
+      </table>
+      <p style="font-size:0.7em; color:#666; margin-top:8px;">+ 10 документов (ВНД, стратегии, KPI, политики)<br>+ 18 целей с заполненными полями</p>
+    </div>
+  </div>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 16: ИНСТРУКЦИЯ ЗАПУСКА ═══════════════════════ -->
+<section>
+  <h2>🚀 Инструкция по запуску</h2>
+  <div style="text-align:left; font-size:0.75em;">
+    <h3 style="margin-top:0;">Шаг 1: Установка зависимостей</h3>
+<pre><code>pip install -r requirements.txt</code></pre>
+
+    <h3>Шаг 2: (Опционально) Настроить LLM</h3>
+<pre><code># Windows PowerShell:
+$env:OPENAI_API_KEY = "sk-proj-ваш-ключ"
+
+# Linux / Mac:
+export OPENAI_API_KEY="sk-proj-ваш-ключ"</code></pre>
+    <div class="highlight-box" style="font-size:0.9em;">
+      💡 <b>Без ключа</b> проект полностью работает в rule-based режиме (graceful degradation).<br>
+      <b>С ключом</b> — генерация и переписывание через GPT-4o-mini.
+    </div>
+
+    <h3>Шаг 3: Запуск сервера</h3>
+<pre><code>cd backend_project
+uvicorn app.main:app --host 0.0.0.0 --port 8899</code></pre>
+
+    <h3>Шаг 4: Открыть Swagger UI</h3>
+    <p>👉 <b>http://localhost:8899/docs</b> — интерактивная документация API</p>
+  </div>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 17: КАК ТЕСТИРОВАТЬ (Свои данные) ═══════════════════════ -->
+<section>
+  <h2>🧪 Как проверить со своими данными</h2>
+  <div style="text-align:left; font-size:0.72em;">
+
+    <h3 style="margin-top:0;">1. Загрузите свои ВНД / стратегии</h3>
+    <p>Эндпоинт: <b>POST /api/v1/documents/ingest</b></p>
+<pre><code>{
+  "documents": [
+    {
+      "doc_id": "REAL-VND-01",
+      "doc_type": "vnd",
+      "title": "Ваш ВНД / стратегия компании",
+      "content": "Полный текст документа...",
+      "owner_department_id": "dep_hr",
+      "department_scope": ["dep_hr", "dep_ops"],
+      "keywords": ["ключевые", "слова"]
+    }
+  ]
+}</code></pre>
+
+    <h3>2. Оцените реальные цели сотрудников</h3>
+    <p>Возьмите настоящие цели из вашей системы и отправьте в <b>POST /api/v1/goals/evaluate</b></p>
+
+    <h3>3. Сгенерируйте цели для реальной должности</h3>
+    <p>Используйте <b>POST /api/v1/goals/generate</b> с указанием фокуса по вашим приоритетам</p>
+
+    <h3>4. Запустите автоматические тесты</h3>
+<pre><code>python qa/run_api_contract_tests.py     # 10 контрактных тестов
+python qa/quick_test.py                 # 11 эндпоинтов
+python qa/run_diagnostic_50.py          # 100 целей (50 bad + 50 good)</code></pre>
+  </div>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 18: ПОСТАВКА ═══════════════════════ -->
+<section>
+  <h2>📦 Состав поставки (§10)</h2>
+  <table>
+    <thead>
+      <tr><th>Артефакт</th><th>Описание</th><th>Статус</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Исходный код</td><td>Backend (FastAPI) + Frontend (React)</td><td><span class="check">✅</span></td></tr>
+      <tr><td>README.md</td><td>Документация, инструкция, формат I/O</td><td><span class="check">✅</span></td></tr>
+      <tr><td>requirements.txt</td><td>Python-зависимости</td><td><span class="check">✅</span></td></tr>
+      <tr><td>.env.example</td><td>Шаблон конфигурации</td><td><span class="check">✅</span></td></tr>
+      <tr><td>docker-compose.yml</td><td>Оркестрация контейнеров</td><td><span class="check">✅</span></td></tr>
+      <tr><td>Тестовые данные</td><td>100 целей + 14 сценариев + контрактные тесты</td><td><span class="check">✅</span></td></tr>
+      <tr><td>Отчёт о тестировании</td><td>test_report.md / test_report.json</td><td><span class="check">✅</span></td></tr>
+      <tr><td>Swagger UI</td><td>Интерактивная API-документация</td><td><span class="check">✅</span></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- ═══════════════════════ СЛАЙД 19: СПАСИБО ═══════════════════════ -->
+<section data-background="linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)">
+  <h1 style="color:white; font-size:2.5em;">🎯 GoalCraft AI</h1>
+  <br>
+  <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:15px;">
+    <div class="metric-card" style="background:rgba(255,255,255,0.1); box-shadow:none;">
+      <div class="value" style="color:#60a5fa;">100%</div>
+      <div class="label" style="color:#94a3b8;">Точность</div>
+    </div>
+    <div class="metric-card" style="background:rgba(255,255,255,0.1); box-shadow:none;">
+      <div class="value" style="color:#60a5fa;">10/10</div>
+      <div class="label" style="color:#94a3b8;">Тесты</div>
+    </div>
+    <div class="metric-card" style="background:rgba(255,255,255,0.1); box-shadow:none;">
+      <div class="value" style="color:#60a5fa;">11</div>
+      <div class="label" style="color:#94a3b8;">API эндпоинтов</div>
+    </div>
+    <div class="metric-card" style="background:rgba(255,255,255,0.1); box-shadow:none;">
+      <div class="value" style="color:#60a5fa;">7/7</div>
+      <div class="label" style="color:#94a3b8;">MVP функций</div>
+    </div>
+  </div>
+  <br>
+  <p style="color:#94a3b8; font-size:0.9em;">Спасибо за внимание!</p>
+  <p style="color:#64748b; font-size:0.7em;">
+    Swagger UI: <span style="color:#60a5fa;">http://localhost:8899/docs</span><br>
+    Тесты: <span style="color:#60a5fa;">python qa/run_api_contract_tests.py</span>
+  </p>
+</section>
+
+</div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    width: 1200,
+    height: 700,
+    margin: 0.04,
+    transition: 'slide',
+    backgroundTransition: 'fade',
+    controls: true,
+    progress: true,
+    center: true,
+  });
+</script>
+</body>
+</html>

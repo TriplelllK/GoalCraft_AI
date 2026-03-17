@@ -1,0 +1,138 @@
+from __future__ import annotations
+
+from fastapi import APIRouter, Depends, HTTPException, Query
+
+from app.container import AppContainer, container
+from app.models.schemas import (
+    CascadeGoalsRequest,
+    CascadeGoalsResponse,
+    DashboardOverview,
+    DepartmentSnapshot,
+    EmployeeContextResponse,
+    EvaluateBatchRequest,
+    EvaluateGoalRequest,
+    GenerateGoalsRequest,
+    GeneratedGoal,
+    GoalEvaluationResponse,
+    HealthResponse,
+    IngestDocumentsRequest,
+    IngestDocumentsResponse,
+    MaturityReport,
+    RewriteGoalRequest,
+)
+
+router = APIRouter()
+
+
+def get_container() -> AppContainer:
+    return container
+
+
+@router.get("/health", response_model=HealthResponse, tags=["system"])
+async def health(ctx: AppContainer = Depends(get_container)) -> HealthResponse:
+    return ctx.engine.health()
+
+
+@router.post("/api/v1/goals/evaluate", response_model=GoalEvaluationResponse, tags=["goals"])
+async def evaluate_goal(payload: EvaluateGoalRequest, ctx: AppContainer = Depends(get_container)) -> GoalEvaluationResponse:
+    try:
+        return ctx.engine.evaluate_goal(payload.employee_id, payload.goal_text, payload.quarter, payload.year)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/api/v1/goals/rewrite", response_model=dict, tags=["goals"])
+async def rewrite_goal(payload: RewriteGoalRequest, ctx: AppContainer = Depends(get_container)) -> dict:
+    try:
+        return {"rewrite": ctx.engine.rewrite_goal(payload.employee_id, payload.goal_text, payload.quarter)}
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/api/v1/goals/generate", response_model=list[GeneratedGoal], tags=["goals"])
+async def generate_goals(payload: GenerateGoalsRequest, ctx: AppContainer = Depends(get_container)) -> list[GeneratedGoal]:
+    try:
+        return ctx.engine.generate_goals(payload.employee_id, payload.quarter, payload.year, payload.count, payload.focus)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.post("/api/v1/goals/evaluate-batch", tags=["goals"])
+async def evaluate_batch(payload: EvaluateBatchRequest, ctx: AppContainer = Depends(get_container)):
+    try:
+        return ctx.engine.evaluate_batch(payload.employee_id, payload.quarter, payload.year, [item.model_dump() for item in payload.goals])
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/api/v1/dashboard/departments/{department_id}", response_model=DepartmentSnapshot, tags=["dashboard"])
+async def dashboard_department(
+    department_id: str,
+    quarter: str = Query("Q2", pattern=r"^Q[1-4]$"),
+    year: int = Query(2026, ge=2024, le=2100),
+    ctx: AppContainer = Depends(get_container),
+) -> DepartmentSnapshot:
+    try:
+        return ctx.engine.dashboard_department(department_id, quarter, year)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+@router.get("/api/v1/dashboard/overview", response_model=DashboardOverview, tags=["dashboard"])
+async def dashboard_overview(
+    quarter: str = Query("Q2", pattern=r"^Q[1-4]$"),
+    year: int = Query(2026, ge=2024, le=2100),
+    ctx: AppContainer = Depends(get_container),
+) -> DashboardOverview:
+    return ctx.engine.dashboard_overview(quarter, year)
+
+
+@router.post("/api/v1/documents/ingest", response_model=IngestDocumentsResponse, tags=["documents"])
+async def ingest_documents(payload: IngestDocumentsRequest, ctx: AppContainer = Depends(get_container)) -> IngestDocumentsResponse:
+    return ctx.engine.ingest_documents(payload.documents)
+
+
+@router.get("/api/v1/employees/{employee_id}/context", response_model=EmployeeContextResponse, tags=["employees"])
+async def employee_context(
+    employee_id: str,
+    quarter: str = Query("Q2", pattern=r"^Q[1-4]$"),
+    year: int = Query(2026, ge=2024, le=2100),
+    ctx: AppContainer = Depends(get_container),
+) -> EmployeeContextResponse:
+    try:
+        return ctx.engine.employee_context(employee_id, quarter, year)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+# ── F-14: Cascade goals from manager ────────────────────────────────
+
+
+@router.post("/api/v1/goals/cascade", response_model=CascadeGoalsResponse, tags=["goals"])
+async def cascade_goals(payload: CascadeGoalsRequest, ctx: AppContainer = Depends(get_container)) -> CascadeGoalsResponse:
+    try:
+        return ctx.engine.cascade_goals(
+            payload.manager_id,
+            payload.quarter,
+            payload.year,
+            payload.count_per_employee,
+            payload.focus,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc
+
+
+# ── F-22: Maturity report ───────────────────────────────────────────
+
+
+@router.get("/api/v1/dashboard/departments/{department_id}/maturity", response_model=MaturityReport, tags=["dashboard"])
+async def department_maturity(
+    department_id: str,
+    quarter: str = Query("Q2", pattern=r"^Q[1-4]$"),
+    year: int = Query(2026, ge=2024, le=2100),
+    ctx: AppContainer = Depends(get_container),
+) -> MaturityReport:
+    try:
+        return ctx.engine.maturity_report(department_id, quarter, year)
+    except ValueError as exc:
+        raise HTTPException(status_code=404, detail=str(exc)) from exc

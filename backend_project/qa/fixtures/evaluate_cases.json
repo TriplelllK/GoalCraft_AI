@@ -1,0 +1,58 @@
+[
+  {
+    "name": "weak_generic_goal",
+    "request": {
+      "employee_id": "emp_1",
+      "goal_text": "Улучшить процесс обучения сотрудников",
+      "quarter": "Q2",
+      "year": 2026
+    },
+    "expect": {
+      "overall_score_max": 0.65,
+      "alignment_level": "functional",
+      "goal_type": "activity-based",
+      "recommendations_contains": [
+        "Добавить метрику",
+        "Указать срок исполнения"
+      ],
+      "source_required": true,
+      "source_doc_types": ["vnd", "kpi", "manager_goal"],
+      "rewrite_min_length": 50
+    }
+  },
+  {
+    "name": "strategic_impact_goal",
+    "request": {
+      "employee_id": "emp_1",
+      "goal_text": "До 30.06 сократить средний срок согласования HR-заявок с 5 до 3 рабочих дней за счет цифровизации маршрута согласования",
+      "quarter": "Q2",
+      "year": 2026
+    },
+    "expect": {
+      "overall_score_min": 0.7,
+      "alignment_level": "strategic",
+      "goal_type": "impact-based",
+      "recommendations_contains": ["Добавить метрику"],
+      "source_required": true,
+      "source_doc_types": ["strategy", "kpi", "manager_goal"],
+      "rewrite_min_length": 50
+    }
+  },
+  {
+    "name": "output_goal",
+    "request": {
+      "employee_id": "emp_1",
+      "goal_text": "До конца Q2 внедрить дашборд по статусу целей и обязательному обучению с еженедельным обновлением показателей",
+      "quarter": "Q2",
+      "year": 2026
+    },
+    "expect": {
+      "overall_score_min": 0.65,
+      "alignment_level": "strategic",
+      "goal_type": "output-based",
+      "recommendations_contains": ["Добавить метрику"],
+      "source_required": true,
+      "rewrite_min_length": 50
+    }
+  }
+]

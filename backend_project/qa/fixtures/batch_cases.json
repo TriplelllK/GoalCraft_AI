@@ -1,0 +1,57 @@
+[
+  {
+    "name": "balanced_two_goals",
+    "request": {
+      "employee_id": "emp_1",
+      "quarter": "Q2",
+      "year": 2026,
+      "goals": [
+        {
+          "title": "До 30.06 сократить средний срок согласования HR-заявок с 5 до 3 рабочих дней за счет цифровизации маршрута согласования",
+          "weight": 50
+        },
+        {
+          "title": "До конца Q2 повысить долю стратегически связанных целей сотрудников не ниже 80% на основе ВНД, KPI и целей руководителя",
+          "weight": 50
+        }
+      ]
+    },
+    "expect": {
+      "goal_count": 2,
+      "average_smart_index_min": 0.7,
+      "strategic_goal_share_min": 0.9,
+      "total_weight": 100.0,
+      "duplicates_found": 0,
+      "alerts_contains": ["менее 3 целей"]
+    }
+  },
+  {
+    "name": "duplicates_and_wrong_weight",
+    "request": {
+      "employee_id": "emp_1",
+      "quarter": "Q2",
+      "year": 2026,
+      "goals": [
+        {
+          "title": "Улучшить процесс обучения сотрудников",
+          "weight": 40
+        },
+        {
+          "title": "Улучшить процесс обучения сотрудников",
+          "weight": 40
+        }
+      ]
+    },
+    "expect": {
+      "goal_count": 2,
+      "average_smart_index_max": 0.65,
+      "total_weight": 80.0,
+      "duplicates_found": 1,
+      "alerts_contains": [
+        "менее 3 целей",
+        "не равен 100%",
+        "дублирующихся целей"
+      ]
+    }
+  }
+]

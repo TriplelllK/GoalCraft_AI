@@ -1,0 +1,19 @@
+[
+  {
+    "name": "default_generation_hrbp",
+    "request": {
+      "employee_id": "emp_1",
+      "quarter": "Q2",
+      "year": 2026,
+      "count": 3,
+      "focus": "цифровизация и обязательное обучение"
+    },
+    "expect": {
+      "count": 3,
+      "score_min": 0.6,
+      "source_required": true,
+      "allowed_alignment_levels": ["strategic", "functional", "operational"],
+      "allowed_goal_types": ["impact-based", "output-based", "activity-based"]
+    }
+  }
+]

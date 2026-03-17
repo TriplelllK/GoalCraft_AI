@@ -1,0 +1,52 @@
+# ── Secrets & API keys ────────────────────────────────────────────
+llm_api_key.txt
+*.key
+*.secret
+.env
+.env.*
+!.env.example
+
+# ── Binary / large files (not for git) ───────────────────────────
+*.pdf
+*.docx
+*.pptx
+*.xlsx
+
+# ── Python ───────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.venv/
+venv/
+env/
+.Python
+
+# ── Node / Frontend ─────────────────────────────────────────────
+**/node_modules/
+**/frontend/dist/
+**/frontend/.vite/
+*.tsbuildinfo
+package-lock.json
+
+# ── IDE ──────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# ── Docker ───────────────────────────────────────────────────────
+*.log
+docker-compose.override.yml
+
+# ── Test artifacts ───────────────────────────────────────────────
+**/qa/diagnostic_report.json
+**/qa/test_report.json

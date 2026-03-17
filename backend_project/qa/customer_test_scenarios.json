@@ -1,0 +1,182 @@
+{
+  "description": "Тестовый файл для проверки API GoalCraft AI заказчиком. Содержит примеры для всех основных эндпоинтов.",
+  "instructions": "Используйте Swagger UI (http://localhost:8899/docs) или curl/Postman для отправки запросов.",
+
+  "test_scenarios": [
+    {
+      "name": "1. Оценка слабой цели (ожидается низкий score)",
+      "endpoint": "POST /api/v1/goals/evaluate",
+      "request": {
+        "employee_id": "emp_1",
+        "goal_text": "Улучшить работу отдела",
+        "quarter": "Q2",
+        "year": 2026
+      },
+      "expected": "overall_score < 0.65, рекомендации по улучшению"
+    },
+    {
+      "name": "2. Оценка сильной SMART-цели (ожидается высокий score)",
+      "endpoint": "POST /api/v1/goals/evaluate",
+      "request": {
+        "employee_id": "emp_1",
+        "goal_text": "До 30.06 сократить средний срок согласования HR-заявок с 5 до 3 рабочих дней за счет цифровизации маршрута согласования",
+        "quarter": "Q2",
+        "year": 2026
+      },
+      "expected": "overall_score >= 0.75, alignment_level = strategic"
+    },
+    {
+      "name": "3. Оценка цели без срока",
+      "endpoint": "POST /api/v1/goals/evaluate",
+      "request": {
+        "employee_id": "emp_1",
+        "goal_text": "Снизить текучесть персонала до 8% за счет внедрения программы удержания ключевых сотрудников",
+        "quarter": "Q2",
+        "year": 2026
+      },
+      "expected": "timebound < 0.7, рекомендация указать срок"
+    },
+    {
+      "name": "4. Оценка нереалистичной цели",
+      "endpoint": "POST /api/v1/goals/evaluate",
+      "request": {
+        "employee_id": "emp_1",
+        "goal_text": "Увеличить производительность в 10 раз до конца квартала",
+        "quarter": "Q2",
+        "year": 2026
+      },
+      "expected": "overall_score < 0.5, предупреждение о нереалистичности"
+    },
+    {
+      "name": "5. Генерация целей для HR Business Partner",
+      "endpoint": "POST /api/v1/goals/generate",
+      "request": {
+        "employee_id": "emp_1",
+        "quarter": "Q2",
+        "year": 2026,
+        "count": 3,
+        "focus": "цифровизация HR-процессов"
+      },
+      "expected": "3 цели со score >= 0.7, привязка к документам"
+    },
+    {
+      "name": "6. Генерация целей для рекрутера",
+      "endpoint": "POST /api/v1/goals/generate",
+      "request": {
+        "employee_id": "emp_4",
+        "quarter": "Q2",
+        "year": 2026,
+        "count": 3,
+        "focus": "подбор и адаптация"
+      },
+      "expected": "3 цели, связанные с подбором персонала"
+    },
+    {
+      "name": "7. Переписывание слабой цели",
+      "endpoint": "POST /api/v1/goals/rewrite",
+      "request": {
+        "employee_id": "emp_1",
+        "goal_text": "Сделать обучение лучше",
+        "quarter": "Q2"
+      },
+      "expected": "Переформулированная SMART-совместимая цель"
+    },
+    {
+      "name": "8. Пакетная оценка набора целей",
+      "endpoint": "POST /api/v1/goals/evaluate-batch",
+      "request": {
+        "employee_id": "emp_1",
+        "quarter": "Q2",
+        "year": 2026,
+        "goals": [
+          { "title": "До 30.06 довести долю KPI-привязанных целей до 85%", "weight": 30.0 },
+          { "title": "До конца Q2 сократить срок согласования заявок до 3 дней", "weight": 30.0 },
+          { "title": "Улучшить процессы в отделе", "weight": 40.0 }
+        ]
+      },
+      "expected": "average_smart_index, weakest_criteria, alerts (вес = 100%)"
+    },
+    {
+      "name": "9. Каскадирование целей от руководителя",
+      "endpoint": "POST /api/v1/goals/cascade",
+      "request": {
+        "manager_id": "emp_mgr",
+        "quarter": "Q2",
+        "year": 2026,
+        "count_per_employee": 3
+      },
+      "expected": "Цели для подчинённых, каскадированные от целей руководителя"
+    },
+    {
+      "name": "10. Дашборд по подразделению",
+      "endpoint": "GET /api/v1/dashboard/departments/dep_hr?quarter=Q2&year=2026",
+      "request": null,
+      "expected": "avg_smart_score, strategic_goal_share, maturity_index"
+    },
+    {
+      "name": "11. Общий дашборд",
+      "endpoint": "GET /api/v1/dashboard/overview?quarter=Q2&year=2026",
+      "request": null,
+      "expected": "Обзор по всем подразделениям"
+    },
+    {
+      "name": "12. Индекс зрелости подразделения",
+      "endpoint": "GET /api/v1/dashboard/departments/dep_hr/maturity?quarter=Q2&year=2026",
+      "request": null,
+      "expected": "maturity_index, maturity_level, smart_distribution, рекомендации"
+    },
+    {
+      "name": "13. Загрузка пользовательских документов (ВНД)",
+      "endpoint": "POST /api/v1/documents/ingest",
+      "request": {
+        "documents": [
+          {
+            "doc_id": "USER-DOC-01",
+            "doc_type": "vnd",
+            "title": "ВНД по управлению проектами",
+            "content": "Все проекты должны иметь утверждённый устав. Руководитель проекта обязан обеспечить соблюдение сроков этапов не более 10% отклонения. Бюджет контролируется ежемесячно. KPI менеджера проекта: выполнение SLA, соблюдение бюджета, качество deliverables.",
+            "owner_department_id": "dep_it",
+            "department_scope": ["dep_it", "dep_hr"],
+            "keywords": ["проекты", "SLA", "бюджет", "deliverables"]
+          },
+          {
+            "doc_id": "USER-DOC-02",
+            "doc_type": "strategy",
+            "title": "Стратегия развития HR-функции 2026",
+            "content": "Приоритеты: цифровизация кадрового делопроизводства, внедрение HR-аналитики, переход на электронный документооборот, автоматизация процессов оценки персонала.",
+            "owner_department_id": "dep_hr",
+            "department_scope": ["dep_hr", "dep_it"],
+            "keywords": ["цифровизация", "HR-аналитика", "документооборот", "оценка"]
+          }
+        ]
+      },
+      "expected": "indexed_documents: 2, indexed_chunks > 0"
+    },
+    {
+      "name": "14. Контекст сотрудника",
+      "endpoint": "GET /api/v1/employees/emp_1/context?quarter=Q2&year=2026",
+      "request": null,
+      "expected": "Данные сотрудника, подразделение, должность, руководитель, активные цели"
+    }
+  ],
+
+  "available_employees": {
+    "emp_mgr": "Aidos S. — Production Manager, HR / Production Block (руководитель)",
+    "emp_1": "Aigerim S. — HR Business Partner, HR / Production Block",
+    "emp_2": "Dana M. — L&D Specialist, Learning & Development",
+    "emp_3": "Marat K. — Compensation & Benefits Specialist",
+    "emp_4": "Saltanat B. — Recruiter, Recruitment & Staffing",
+    "emp_5": "Nurzhan T. — HR Analyst, HR / Production Block"
+  },
+
+  "available_departments": {
+    "dep_hr": "HR / Production Block",
+    "dep_lnd": "Learning & Development",
+    "dep_ops": "Production Operations",
+    "dep_comp": "Compensation & Benefits",
+    "dep_rec": "Recruitment & Staffing",
+    "dep_fin": "Finance & Budgeting",
+    "dep_it": "IT & Digital",
+    "dep_legal": "Legal & Compliance"
+  }
+}
