@@ -269,3 +269,27 @@ export interface MaturityReport {
   top_recommendations: string[];
   alert_count: number;
 }
+
+/* ── Notifications (Alert Manager) ──────────────────────────────── */
+
+export interface NotificationItem {
+  id: string;
+  severity: 'critical' | 'warning' | 'info';
+  target_role: 'manager' | 'employee' | 'hr';
+  employee_id?: string | null;
+  employee_name: string;
+  department_id: string;
+  department_name: string;
+  title: string;
+  message: string;
+  quarter: string;
+  year: number;
+}
+
+export interface NotificationsResponse {
+  total: number;
+  critical: number;
+  warnings: number;
+  info: number;
+  items: NotificationItem[];
+}

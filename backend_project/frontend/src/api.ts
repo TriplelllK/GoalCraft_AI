@@ -12,6 +12,7 @@ import type {
   GoalHistoryResponse,
   HealthResponse,
   MaturityReport,
+  NotificationsResponse,
 } from './types';
 
 const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
@@ -64,4 +65,6 @@ export const api = {
     request<EmployeeRef[]>(`/api/v1/employees${departmentId ? `?department_id=${departmentId}` : ''}`),
   dataStats: () => request<DataStats>('/api/v1/data/stats'),
   goalHistory: (goalId: string) => request<GoalHistoryResponse>(`/api/v1/goals/${goalId}/history`),
+  notifications: (quarter: string, year: number) =>
+    request<NotificationsResponse>(`/api/v1/notifications?quarter=${quarter}&year=${year}`),
 };

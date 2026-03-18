@@ -23,18 +23,18 @@ uvicorn app.main:app --host 0.0.0.0 --port 8899
 
 ```
 app/
-  api/routes.py          # 11 REST-эндпоинтов
+  api/routes.py          # 16 REST-эндпоинтов
   core/config.py         # Конфигурация (env vars)
   container.py           # DI-контейнер
   main.py                # FastAPI entry point
-  models/schemas.py      # Pydantic-модели (Goal §2.1, Document §2.2)
+  models/schemas.py      # Pydantic-модели (Goal §2.1, Document §2.2, Notifications)
   services/
-    engine.py            # GoalEngine — бизнес-логика (845+ строк)
+    engine.py            # GoalEngine — бизнес-логика (950+ строк)
     rules.py             # SMART-правила (300+ строк, детерминированные)
     llm.py               # LLM-сервис (GPT-4o-mini, graceful degradation)
   storage/
     memory.py            # In-memory хранилище (8 отделов, 6 сотрудников, 10 ВНД, 18 целей)
-    postgres.py          # PostgreSQL production store
+    postgres.py          # PostgreSQL production store (13 таблиц)
   vector/
     memory_vector.py     # In-memory векторный поиск
     qdrant_vector.py     # Qdrant vector store
@@ -43,8 +43,8 @@ app/
 ## Тесты
 
 ```bash
-python qa/run_api_contract_tests.py    # 10 контрактных тестов
-python qa/quick_test.py                # 11 эндпоинтов
+python qa/run_api_contract_tests.py    # 14+ контрактных тестов
+python qa/quick_test.py                # 16 эндпоинтов
 python qa/run_diagnostic_50.py         # 100 целей (50 bad + 50 good)
 ```
 
@@ -55,10 +55,10 @@ cp .env.example .env   # заполнить значения
 docker compose up -d
 ```
 
-## Эндпоинты
+## Эндпоинты (16)
 
 | Метод | Путь | Назначение |
-|-------|------|-----------|
+|-------|------|----------|
 | GET | /health | Статус системы |
 | POST | /api/v1/goals/evaluate | SMART-оценка цели |
 | POST | /api/v1/goals/rewrite | Переформулировка цели |
@@ -71,6 +71,7 @@ docker compose up -d
 | POST | /api/v1/documents/ingest | Загрузка ВНД / стратегий |
 | GET | /api/v1/employees/{id}/context | Контекст сотрудника |
 | GET | /api/v1/goals/{id}/history | История изменений цели (F-15) |
+| GET | /api/v1/notifications | **Уведомления / Alert Manager** |
 | GET | /api/v1/data/stats | Статистика загруженных данных (§4.2) |
 | GET | /api/v1/departments | Справочник подразделений |
 | GET | /api/v1/employees | Справочник сотрудников |

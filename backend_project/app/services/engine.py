@@ -19,6 +19,8 @@ from app.models.schemas import (
     HealthResponse,
     IngestDocumentsResponse,
     MaturityReport,
+    NotificationItem,
+    NotificationsResponse,
     OkrMapping,
     SmartBreakdown,
     SmartDistribution,
@@ -870,6 +872,95 @@ class GoalEngine:
             top_recommendations=recs,
             alert_count=alert_count,
         )
+
+    # ── Alert Manager: Notifications ──────────────────────────────────
+
+    def notifications(self, quarter: str, year: int) -> NotificationsResponse:
+        """Generate notifications for managers / employees / HR based on goal quality analysis."""
+        items: list[NotificationItem] = []
+        idx = 0
+
+        for dept in self.store.departments.values():
+            dept_employees = [e for e in self.store.employees.values() if e.department_id == dept.id]
+
+            for emp in dept_employees:
+                goals = self.store.list_employee_goals(emp.id, quarter, year)
+
+                if not goals:
+                    idx += 1
+                    items.append(NotificationItem(
+                        id=f"notif_{idx}", severity="warning", target_role="manager",
+                        employee_id=emp.id, employee_name=emp.full_name,
+                        department_id=dept.id, department_name=dept.name,
+                        title="Нет целей на квартал",
+                        message=f"У сотрудника {emp.full_name} ({dept.name}) отсутствуют цели на {quarter} {year}. Необходимо инициировать целеполагание.",
+                        quarter=quarter, year=year,
+                    ))
+                    continue
+
+                batch = self.evaluate_batch(
+                    emp.id, quarter, year,
+                    [{"title": g.title, "weight": g.weight} for g in goals],
+                )
+
+                if batch.average_smart_index < 0.6:
+                    idx += 1
+                    items.append(NotificationItem(
+                        id=f"notif_{idx}", severity="critical", target_role="manager",
+                        employee_id=emp.id, employee_name=emp.full_name,
+                        department_id=dept.id, department_name=dept.name,
+                        title="Низкий индекс качества целей",
+                        message=f"Средний SMART-индекс целей сотрудника {emp.full_name}: {round(batch.average_smart_index * 100)}%. Требуется доработка формулировок.",
+                        quarter=quarter, year=year,
+                    ))
+
+                if batch.strategic_goal_share < 0.3:
+                    idx += 1
+                    items.append(NotificationItem(
+                        id=f"notif_{idx}", severity="warning", target_role="employee",
+                        employee_id=emp.id, employee_name=emp.full_name,
+                        department_id=dept.id, department_name=dept.name,
+                        title="Слабая стратегическая связка",
+                        message=f"Менее 30% целей {emp.full_name} имеют стратегическую привязку. Рекомендуется пересмотреть цели с учётом ВНД и стратегии.",
+                        quarter=quarter, year=year,
+                    ))
+
+                for alert_text in batch.alerts:
+                    idx += 1
+                    sev = "critical" if "менее 3" in alert_text.lower() or "не равен 100" in alert_text.lower() else "warning"
+                    items.append(NotificationItem(
+                        id=f"notif_{idx}", severity=sev, target_role="manager",
+                        employee_id=emp.id, employee_name=emp.full_name,
+                        department_id=dept.id, department_name=dept.name,
+                        title="Алерт по набору целей",
+                        message=f"{emp.full_name}: {alert_text}",
+                        quarter=quarter, year=year,
+                    ))
+
+            # Department-level maturity check
+            try:
+                snap = self.dashboard_department(dept.id, quarter, year)
+                if snap.maturity_level == "начальный" and snap.alert_count > 0:
+                    idx += 1
+                    items.append(NotificationItem(
+                        id=f"notif_{idx}", severity="critical", target_role="hr",
+                        department_id=dept.id, department_name=dept.name,
+                        title="Низкая зрелость подразделения",
+                        message=f"Подразделение «{dept.name}» на начальном уровне зрелости целеполагания (алертов: {snap.alert_count}). Требуется внимание HR.",
+                        quarter=quarter, year=year,
+                    ))
+            except Exception:
+                pass
+
+        # Sort: critical → warning → info
+        priority = {"critical": 0, "warning": 1, "info": 2}
+        items.sort(key=lambda x: priority.get(x.severity, 99))
+
+        crit = sum(1 for i in items if i.severity == "critical")
+        warn = sum(1 for i in items if i.severity == "warning")
+        info = sum(1 for i in items if i.severity == "info")
+
+        return NotificationsResponse(total=len(items), critical=crit, warnings=warn, info=info, items=items)
 
     # ── F-14: Cascade goals from manager ─────────────────────────────
 

@@ -170,5 +170,14 @@ for e in emps[:3]:
     print(f"  {e['id']}: {e['full_name']} — {e['position_name']} ({e['department_name']})")
 print()
 
+# 16. Notifications (Alert Manager)
+r = requests.get(f"{BASE}/api/v1/notifications?quarter=Q2&year=2026")
+notif = r.json()
+print("=== 16. NOTIFICATIONS (Alert Manager) ===")
+print(f"Total: {notif['total']}, Critical: {notif['critical']}, Warnings: {notif['warnings']}, Info: {notif['info']}")
+for item in notif['items'][:5]:
+    print(f"  [{item['severity'].upper()}] {item['title']}: {item['message'][:100]}")
+print()
+
 print("=" * 60)
-print("✅ ALL 15 ENDPOINT TESTS PASSED SUCCESSFULLY!")
+print("✅ ALL 16 ENDPOINT TESTS PASSED SUCCESSFULLY!")

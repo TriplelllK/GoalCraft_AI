@@ -1,6 +1,6 @@
 # API contract test report
 
-Passed: **14** / 14
+Passed: **15** / 15
 Failed: **0**
 
 ## ✅ health
@@ -511,4 +511,15 @@ ok
     "manager_id": "emp_mgr"
   }
 ]
+```
+
+## ✅ notifications
+ok
+
+```json
+{
+  "total": 4,
+  "critical": 1,
+  "warnings": 3
+}
 ```

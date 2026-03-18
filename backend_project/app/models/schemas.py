@@ -368,3 +368,28 @@ class MaturityReport(BaseModel):
     weakest_criteria: list[str] = Field(default_factory=list)
     top_recommendations: list[str] = Field(default_factory=list)
     alert_count: int = 0
+
+
+# ── Notifications (Alert Manager) ────────────────────────────────────
+
+
+class NotificationItem(BaseModel):
+    id: str
+    severity: str = "warning"  # critical | warning | info
+    target_role: str = "manager"  # manager | employee | hr
+    employee_id: Optional[str] = None
+    employee_name: str = ""
+    department_id: str = ""
+    department_name: str = ""
+    title: str
+    message: str
+    quarter: str = ""
+    year: int = 0
+
+
+class NotificationsResponse(BaseModel):
+    total: int = 0
+    critical: int = 0
+    warnings: int = 0
+    info: int = 0
+    items: list[NotificationItem] = Field(default_factory=list)

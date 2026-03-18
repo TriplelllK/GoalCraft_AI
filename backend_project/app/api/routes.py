@@ -191,6 +191,22 @@ async def goal_history(goal_id: str, ctx: AppContainer = Depends(get_container))
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
 
+# ── Alert Manager: Notifications endpoint ────────────────────────────
+
+
+@router.get("/api/v1/notifications", tags=["notifications"])
+async def list_notifications(
+    quarter: str = Query("Q2", pattern=r"^Q[1-4]$"),
+    year: int = Query(2026, ge=2020, le=2099),
+    ctx: AppContainer = Depends(get_container),
+):
+    """Return generated notifications / alerts for managers, employees and HR."""
+    try:
+        return ctx.engine.notifications(quarter, year)
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
+
+
 # ── §4.2: Data stats endpoint ───────────────────────────────────────
 
 

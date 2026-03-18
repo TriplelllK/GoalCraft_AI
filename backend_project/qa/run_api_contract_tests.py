@@ -313,6 +313,25 @@ class TestRunner:
         assert_true("position_name" in first, "position_name missing")
         return payload[:3]
 
+    def check_notifications(self) -> Any:
+        """Alert Manager: Notifications endpoint."""
+        status, payload = self.client.get("/api/v1/notifications?quarter=Q2&year=2026")
+        assert_true(status == 200, f"notifications returned {status}")
+        assert_true("total" in payload, "total missing")
+        assert_true("critical" in payload, "critical count missing")
+        assert_true("warnings" in payload, "warnings count missing")
+        assert_true("items" in payload, "items list missing")
+        assert_true(isinstance(payload["items"], list), "items should be a list")
+        assert_true(payload["total"] >= 0, "total must be non-negative")
+        if payload["items"]:
+            first = payload["items"][0]
+            assert_true("id" in first, "notification id missing")
+            assert_true("severity" in first, "severity missing")
+            assert_true(first["severity"] in ("critical", "warning", "info"), f"unknown severity: {first['severity']}")
+            assert_true("title" in first, "notification title missing")
+            assert_true("message" in first, "notification message missing")
+        return {"total": payload["total"], "critical": payload["critical"], "warnings": payload["warnings"]}
+
     def run_all(self) -> dict[str, Any]:
         self.run_case("health", self.check_health)
         self.run_case("employee_context", self.check_employee_context)
@@ -328,6 +347,7 @@ class TestRunner:
         self.run_case("data_stats", self.check_data_stats)
         self.run_case("list_departments", self.check_list_departments)
         self.run_case("list_employees", self.check_list_employees)
+        self.run_case("notifications", self.check_notifications)
         passed = sum(1 for item in self.results if item["status"] == "passed")
         failed = len(self.results) - passed
         return {
