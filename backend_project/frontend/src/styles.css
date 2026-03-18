@@ -397,3 +397,149 @@ label {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--bg); }
 ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+/* ── Loading bar ───────────────────────────────────────────────── */
+
+.loading-bar {
+  height: 3px;
+  background: linear-gradient(90deg, var(--primary) 0%, #14b8a6 50%, var(--primary) 100%);
+  background-size: 200% 100%;
+  animation: loading-slide 1.2s ease-in-out infinite;
+  border-radius: 2px;
+  margin-bottom: 1rem;
+}
+@keyframes loading-slide {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ── KPI grid 5 columns ───────────────────────────────────────── */
+
+.kpi-grid-5 { grid-template-columns: repeat(5, 1fr); }
+@media (max-width: 900px) { .kpi-grid-5 { grid-template-columns: repeat(3, 1fr); } }
+@media (max-width: 600px) { .kpi-grid-5 { grid-template-columns: repeat(2, 1fr); } }
+
+/* ── Department ranking table ──────────────────────────────────── */
+
+.dept-table-wrap {
+  overflow-x: auto;
+  margin-top: 0.5rem;
+}
+
+.dept-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.dept-table th {
+  text-align: left;
+  padding: 0.5rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dept-table td {
+  padding: 0.55rem 0.6rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+}
+
+.dept-table tbody tr {
+  cursor: pointer;
+}
+
+.dept-table tbody tr:hover {
+  background: var(--bg-hover);
+}
+
+.dept-table tbody tr.row-selected {
+  background: rgba(59, 130, 246, 0.1);
+  border-left: 3px solid var(--primary);
+}
+
+.rank-cell {
+  font-weight: 700;
+  color: var(--text-muted);
+  width: 32px;
+  text-align: center;
+}
+
+.score-inline {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.alert-badge {
+  display: inline-block;
+  min-width: 22px;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
+.ok-badge {
+  display: inline-block;
+  min-width: 22px;
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-align: center;
+  background: rgba(34, 197, 94, 0.12);
+  color: #86efac;
+}
+
+/* ── Color badges ──────────────────────────────────────────────── */
+
+.badge-green { background: rgba(34, 197, 94, 0.15); color: #86efac; }
+.badge-teal { background: rgba(20, 184, 166, 0.15); color: #5eead4; }
+.badge-yellow { background: rgba(245, 158, 11, 0.15); color: #fcd34d; }
+.badge-red { background: rgba(239, 68, 68, 0.15); color: #fca5a5; }
+
+/* ── Department detail grid ────────────────────────────────────── */
+
+.dept-detail-grid {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.dept-detail-kpis {
+  flex: 1;
+  min-width: 300px;
+}
+
+.dept-detail-maturity {
+  display: flex;
+  justify-content: center;
+}
+
+.maturity-mini-circle {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  border: 4px solid var(--primary);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.maturity-mini-value { font-size: 1.3rem; font-weight: 800; }
+.maturity-mini-label { font-size: 0.68rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+/* ── Status labels ─────────────────────────────────────────────── */
+
+.status-ok { color: #86efac; font-weight: 600; font-size: 0.88rem; }
+.status-demo { color: var(--text-muted); font-weight: 600; font-size: 0.88rem; }

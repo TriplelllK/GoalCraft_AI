@@ -1,6 +1,6 @@
 # API contract test report
 
-Passed: **12** / 12
+Passed: **14** / 14
 Failed: **0**
 
 ## ✅ health
@@ -453,4 +453,62 @@ ok
   "kpi_timeseries": 0,
   "has_dump_data": false
 }
+```
+
+## ✅ list_departments
+ok
+
+```json
+[
+  {
+    "id": "dep_hr",
+    "name": "HR / Production Block",
+    "code": "HR-PB"
+  },
+  {
+    "id": "dep_lnd",
+    "name": "Learning & Development",
+    "code": "LND"
+  },
+  {
+    "id": "dep_ops",
+    "name": "Production Operations",
+    "code": "OPS"
+  }
+]
+```
+
+## ✅ list_employees
+ok
+
+```json
+[
+  {
+    "id": "emp_mgr",
+    "full_name": "Aidos S.",
+    "department_id": "dep_hr",
+    "department_name": "HR / Production Block",
+    "position_id": "pos_mgr",
+    "position_name": "Production Manager",
+    "manager_id": null
+  },
+  {
+    "id": "emp_1",
+    "full_name": "Aigerim S.",
+    "department_id": "dep_hr",
+    "department_name": "HR / Production Block",
+    "position_id": "pos_hrbp",
+    "position_name": "HR Business Partner",
+    "manager_id": "emp_mgr"
+  },
+  {
+    "id": "emp_2",
+    "full_name": "Dana M.",
+    "department_id": "dep_lnd",
+    "department_name": "Learning & Development",
+    "position_id": "pos_lnd",
+    "position_name": "Learning and Development Specialist",
+    "manager_id": "emp_mgr"
+  }
+]
 ```

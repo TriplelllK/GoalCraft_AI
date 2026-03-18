@@ -23,11 +23,11 @@ export function Layout({ health, children }: LayoutProps) {
         </nav>
         <div className="status-pill">
           {health ? (
-            <span className="status-dot online" title={`${health.mode} · ${health.vector_backend}`} />
+            <span className="status-dot online" title={`${health.mode} · ${health.vector_backend} · LLM: ${health.llm_enabled ? 'ON' : 'OFF'}`} />
           ) : (
             <span className="status-dot offline" />
           )}
-          {health ? `${health.mode} · docs: ${health.indexed_documents}` : 'offline'}
+          {health ? `${health.mode} · ${health.indexed_documents} док · ${health.employees_count || '?'} сотр` : 'offline'}
         </div>
       </header>
       <main className="app-main">{children}</main>

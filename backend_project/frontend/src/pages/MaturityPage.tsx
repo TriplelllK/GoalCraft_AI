@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 import { api } from '../api';
+import { DepartmentPicker } from '../components/DepartmentPicker';
 import { KpiCard } from '../components/KpiCard';
 import { ProgressBar } from '../components/ProgressBar';
 import type { MaturityReport } from '../types';
@@ -65,10 +66,7 @@ export function MaturityPage() {
         </div>
 
         <div className="form-grid three-columns">
-          <label>
-            Department ID
-            <input value={departmentId} onChange={(e) => setDepartmentId(e.target.value)} />
-          </label>
+          <DepartmentPicker value={departmentId} onChange={setDepartmentId} />
           <label>
             Квартал
             <select value={quarter} onChange={(e) => setQuarter(e.target.value)}>

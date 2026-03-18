@@ -33,6 +33,39 @@ async def health(ctx: AppContainer = Depends(get_container)) -> HealthResponse:
     return ctx.engine.health()
 
 
+# ── Reference data (for UI dropdowns) ──────────────────────────────
+
+
+@router.get("/api/v1/departments", tags=["reference"])
+async def list_departments(ctx: AppContainer = Depends(get_container)):
+    """Return all departments (for dropdown selectors)."""
+    depts = ctx.engine.store.list_departments()
+    return [{"id": d.id, "name": d.name, "code": d.code} for d in depts]
+
+
+@router.get("/api/v1/employees", tags=["reference"])
+async def list_employees(
+    department_id: str | None = Query(None),
+    ctx: AppContainer = Depends(get_container),
+):
+    """Return employees with position/department names (for dropdowns)."""
+    emps = ctx.engine.store.list_employees(department_id)
+    result = []
+    for e in emps:
+        dept = ctx.engine.store.get_department(e.department_id)
+        pos = ctx.engine.store.get_position(e.position_id)
+        result.append({
+            "id": e.id,
+            "full_name": e.full_name,
+            "department_id": e.department_id,
+            "department_name": dept.name if dept else "",
+            "position_id": e.position_id,
+            "position_name": pos.name if pos else "",
+            "manager_id": e.manager_id,
+        })
+    return result
+
+
 @router.post("/api/v1/goals/evaluate", response_model=GoalEvaluationResponse, tags=["goals"])
 async def evaluate_goal(payload: EvaluateGoalRequest, ctx: AppContainer = Depends(get_container)) -> GoalEvaluationResponse:
     try:

@@ -288,6 +288,31 @@ class TestRunner:
         assert_true("has_dump_data" in payload, "has_dump_data field missing")
         return payload
 
+    def check_list_departments(self) -> Any:
+        """Reference: List departments for UI dropdowns."""
+        status, payload = self.client.get("/api/v1/departments")
+        assert_true(status == 200, f"list departments returned {status}")
+        assert_true(isinstance(payload, list), "expected list of departments")
+        assert_true(len(payload) == 8, f"expected 8 departments, got {len(payload)}")
+        first = payload[0]
+        assert_true("id" in first, "department id missing")
+        assert_true("name" in first, "department name missing")
+        assert_true("code" in first, "department code missing")
+        return payload[:3]
+
+    def check_list_employees(self) -> Any:
+        """Reference: List employees for UI dropdowns."""
+        status, payload = self.client.get("/api/v1/employees")
+        assert_true(status == 200, f"list employees returned {status}")
+        assert_true(isinstance(payload, list), "expected list of employees")
+        assert_true(len(payload) >= 6, f"expected at least 6 employees, got {len(payload)}")
+        first = payload[0]
+        assert_true("id" in first, "employee id missing")
+        assert_true("full_name" in first, "full_name missing")
+        assert_true("department_name" in first, "department_name missing")
+        assert_true("position_name" in first, "position_name missing")
+        return payload[:3]
+
     def run_all(self) -> dict[str, Any]:
         self.run_case("health", self.check_health)
         self.run_case("employee_context", self.check_employee_context)
@@ -301,6 +326,8 @@ class TestRunner:
         self.run_case("maturity_report", self.check_maturity_cases)
         self.run_case("goal_history", self.check_goal_history)
         self.run_case("data_stats", self.check_data_stats)
+        self.run_case("list_departments", self.check_list_departments)
+        self.run_case("list_employees", self.check_list_employees)
         passed = sum(1 for item in self.results if item["status"] == "passed")
         failed = len(self.results) - passed
         return {

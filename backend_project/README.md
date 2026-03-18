@@ -70,8 +70,10 @@ docker compose up -d
 | GET | /api/v1/dashboard/{id}/maturity | Индекс зрелости |
 | POST | /api/v1/documents/ingest | Загрузка ВНД / стратегий |
 | GET | /api/v1/employees/{id}/context | Контекст сотрудника |
-- `POST /api/v1/documents/ingest`
-- `GET /api/v1/employees/{employee_id}/context`
+| GET | /api/v1/goals/{id}/history | История изменений цели (F-15) |
+| GET | /api/v1/data/stats | Статистика загруженных данных (§4.2) |
+| GET | /api/v1/departments | Справочник подразделений |
+| GET | /api/v1/employees | Справочник сотрудников |
 
 ## Важно
 В текущем artifact проект по умолчанию работает в demo-safe режиме, чтобы запускаться без внешней инфраструктуры и без падений в среде, где пока нет драйверов/клиентов. Структура уже подготовлена для следующего шага: подключение реального PostgreSQL-репозитория и Qdrant retrieval.

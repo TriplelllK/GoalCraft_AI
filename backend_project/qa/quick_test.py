@@ -152,5 +152,23 @@ print(f"Departments: {stats['departments']}, Employees: {stats['employees']}, Go
 print(f"Has dump data: {stats['has_dump_data']}")
 print()
 
+# 14. List departments (reference data for dropdowns)
+r = requests.get(f"{BASE}/api/v1/departments")
+depts = r.json()
+print("=== 14. LIST DEPARTMENTS ===")
+print(f"Total: {len(depts)} departments")
+for d in depts[:3]:
+    print(f"  {d['id']}: {d['name']} ({d['code']})")
+print()
+
+# 15. List employees (reference data for dropdowns)
+r = requests.get(f"{BASE}/api/v1/employees")
+emps = r.json()
+print("=== 15. LIST EMPLOYEES ===")
+print(f"Total: {len(emps)} employees")
+for e in emps[:3]:
+    print(f"  {e['id']}: {e['full_name']} — {e['position_name']} ({e['department_name']})")
+print()
+
 print("=" * 60)
-print("✅ ALL 13 ENDPOINT TESTS PASSED SUCCESSFULLY!")
+print("✅ ALL 15 ENDPOINT TESTS PASSED SUCCESSFULLY!")

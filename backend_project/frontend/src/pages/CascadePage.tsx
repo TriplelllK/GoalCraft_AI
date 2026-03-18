@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../api';
+import { EmployeePicker } from '../components/EmployeePicker';
 import { KpiCard } from '../components/KpiCard';
 import { SourceBox } from '../components/SourceBox';
 import type { CascadeGoalsResponse } from '../types';
@@ -47,10 +48,7 @@ export function CascadePage() {
         </div>
 
         <div className="form-grid two-columns">
-          <label>
-            Manager ID
-            <input value={managerId} onChange={(e) => setManagerId(e.target.value)} />
-          </label>
+          <EmployeePicker value={managerId} onChange={setManagerId} label="Руководитель" managersOnly />
           <label>
             Количество целей на сотрудника
             <select value={count} onChange={(e) => setCount(Number(e.target.value))}>

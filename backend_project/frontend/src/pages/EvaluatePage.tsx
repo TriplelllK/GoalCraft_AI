@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { api } from '../api';
+import { EmployeePicker } from '../components/EmployeePicker';
 import { KpiCard } from '../components/KpiCard';
 import { ProgressBar } from '../components/ProgressBar';
 import { SourceBox } from '../components/SourceBox';
@@ -73,10 +74,7 @@ export function EvaluatePage() {
         </div>
 
         <div className="form-grid two-columns">
-          <label>
-            Employee ID
-            <input value={employeeId} onChange={(e) => setEmployeeId(e.target.value)} />
-          </label>
+          <EmployeePicker value={employeeId} onChange={setEmployeeId} />
           <label>
             Квартал
             <select value={quarter} onChange={(e) => setQuarter(e.target.value)}>

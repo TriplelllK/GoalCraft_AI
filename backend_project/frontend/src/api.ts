@@ -2,10 +2,14 @@ import type {
   BatchEvaluationResponse,
   CascadeGoalsResponse,
   DashboardOverview,
+  DataStats,
+  DepartmentRef,
   DepartmentSnapshot,
   EmployeeContextResponse,
+  EmployeeRef,
   GeneratedGoal,
   GoalEvaluationResponse,
+  GoalHistoryResponse,
   HealthResponse,
   MaturityReport,
 } from './types';
@@ -54,5 +58,10 @@ export const api = {
   cascadeGoals: (payload: { manager_id: string; quarter: string; year: number; count_per_employee?: number; focus?: string }) =>
     request<CascadeGoalsResponse>('/api/v1/goals/cascade', { method: 'POST', body: JSON.stringify(payload) }),
   departmentMaturity: (departmentId: string, quarter: string, year: number) =>
-    request<MaturityReport>(`/api/v1/dashboard/departments/${departmentId}/maturity?quarter=${quarter}&year=${year}`)
+    request<MaturityReport>(`/api/v1/dashboard/departments/${departmentId}/maturity?quarter=${quarter}&year=${year}`),
+  listDepartments: () => request<DepartmentRef[]>('/api/v1/departments'),
+  listEmployees: (departmentId?: string) =>
+    request<EmployeeRef[]>(`/api/v1/employees${departmentId ? `?department_id=${departmentId}` : ''}`),
+  dataStats: () => request<DataStats>('/api/v1/data/stats'),
+  goalHistory: (goalId: string) => request<GoalHistoryResponse>(`/api/v1/goals/${goalId}/history`),
 };

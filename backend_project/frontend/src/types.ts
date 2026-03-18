@@ -62,6 +62,50 @@ export interface HealthResponse {
   indexed_documents: number;
   indexed_chunks: number;
   llm_enabled: boolean;
+  employees_count?: number;
+  goals_count?: number;
+  goal_events_count?: number;
+  goal_reviews_count?: number;
+  kpi_catalog_count?: number;
+}
+
+/* ── Reference data (for dropdowns) ──────────────────────────────── */
+
+export interface DepartmentRef {
+  id: string;
+  name: string;
+  code: string;
+}
+
+export interface EmployeeRef {
+  id: string;
+  full_name: string;
+  department_id: string;
+  department_name: string;
+  position_id: string;
+  position_name: string;
+  manager_id?: string | null;
+}
+
+export interface DataStats {
+  departments: number;
+  positions: number;
+  employees: number;
+  documents: number;
+  goals: number;
+  goal_events: number;
+  goal_reviews: number;
+  kpi_catalog: number;
+  kpi_timeseries: number;
+  has_dump_data: boolean;
+}
+
+export interface GoalHistoryResponse {
+  goal_id: string;
+  events: Record<string, unknown>[];
+  reviews: Record<string, unknown>[];
+  total_events: number;
+  total_reviews: number;
 }
 
 export interface SmartBreakdown {
