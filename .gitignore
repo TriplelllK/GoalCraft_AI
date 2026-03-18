@@ -16,6 +16,22 @@ llm_api_key.txt
 *.zip
 *.tar.gz
 
+# ── Hackathon dump data (§4.2) ───────────────────────────────────
+backend_project/data/mock_smart_1.sql
+backend_project/data/department/
+backend_project/data/documents/
+backend_project/data/employees/
+backend_project/data/employee_projects/
+backend_project/data/goals/
+backend_project/data/goal_events/
+backend_project/data/goal_reviews/
+backend_project/data/kpi_catalog/
+backend_project/data/kpi_timeseries/
+backend_project/data/positions/
+backend_project/data/projects/
+backend_project/data/project_systems/
+backend_project/data/systems/
+
 # ── Python ───────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]

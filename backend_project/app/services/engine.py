@@ -713,24 +713,29 @@ class GoalEngine:
             items=items,
         )
 
+    def _fast_evaluate_goal_text(self, goal_text: str, role_name: str = "", dept_name: str = "") -> tuple[float, str, str]:
+        """Fast SMART evaluation for dashboard aggregation (no RAG/LLM/history lookups).
+
+        Returns: (overall_score, alignment_level, goal_type)
+        """
+        breakdown = self._smart_breakdown(goal_text, role_name, dept_name, top_chunk=None)
+        overall = round(safe_mean([
+            breakdown.specific, breakdown.measurable, breakdown.achievable,
+            breakdown.relevant, breakdown.timebound,
+        ]), 2)
+        alignment = self._alignment_level(goal_text, None)
+        goal_type = self._goal_type(goal_text)
+        return overall, alignment, goal_type
+
     def dashboard_department(self, department_id: str, quarter: str, year: int) -> DepartmentSnapshot:
         dept = self.store.get_department(department_id)
         if dept is None:
             raise ValueError("department not found")
-        employee_ids = [e.id for e in self.store.employees.values() if e.department_id == department_id]
-        batch_results = []
-        for employee_id in employee_ids:
-            goals = self.store.list_employee_goals(employee_id, quarter, year)
-            if not goals:
-                continue
-            batch = self.evaluate_batch(
-                employee_id,
-                quarter,
-                year,
-                [{"title": goal.title, "weight": goal.weight} for goal in goals],
-            )
-            batch_results.append(batch)
-        if not batch_results:
+
+        # Get all goals for the department in one query (efficient for large datasets)
+        dept_goals = self.store.list_department_goals(department_id, quarter, year)
+
+        if not dept_goals:
             return DepartmentSnapshot(
                 department_id=department_id,
                 department_name=dept.name,
@@ -739,37 +744,80 @@ class GoalEngine:
                 weakest_criterion="n/a",
                 alert_count=0,
             )
-        weakest_counter: Counter[str] = Counter()
-        for result in batch_results:
-            weakest_counter.update(result.weakest_criteria[:1])
 
-        avg_smart = round(safe_mean([item.average_smart_index for item in batch_results]), 2)
-        strategic_share = round(safe_mean([item.strategic_goal_share for item in batch_results]), 2)
-        # F-22: compute maturity index inline
-        maturity_index = round(self._compute_maturity_index(avg_smart, strategic_share, len(batch_results)), 2)
+        # Use fast scoring path for large datasets (> 20 goals), full scoring for small
+        use_fast = len(dept_goals) > 20
+        scores = []
+        strategic_count = 0
+        weakest_counter: Counter[str] = Counter()
+
+        if use_fast:
+            # Fast path: rule-based scoring without RAG/LLM
+            for goal in dept_goals:
+                overall, alignment, _ = self._fast_evaluate_goal_text(
+                    goal.title, goal.position, dept.name,
+                )
+                scores.append(overall)
+                if alignment == "strategic":
+                    strategic_count += 1
+                # Track weakest criteria via fast breakdown
+                bd = self._smart_breakdown(goal.title, goal.position, dept.name, None)
+                criteria = {"specific": bd.specific, "measurable": bd.measurable,
+                            "achievable": bd.achievable, "relevant": bd.relevant, "timebound": bd.timebound}
+                weakest_counter.update([min(criteria.items(), key=lambda x: x[1])[0]])
+        else:
+            # Full path for small datasets (demo mode)
+            employee_ids = set(g.employee_id for g in dept_goals)
+            batch_results = []
+            for employee_id in employee_ids:
+                emp_goals = [g for g in dept_goals if g.employee_id == employee_id]
+                if not emp_goals:
+                    continue
+                batch = self.evaluate_batch(
+                    employee_id, quarter, year,
+                    [{"title": goal.title, "weight": goal.weight} for goal in emp_goals],
+                )
+                batch_results.append(batch)
+            if batch_results:
+                for result in batch_results:
+                    weakest_counter.update(result.weakest_criteria[:1])
+                scores = [item.average_smart_index for item in batch_results]
+                strategic_count = sum(1 for item in batch_results if item.strategic_goal_share > 0.5)
+
+        avg_smart = round(safe_mean(scores), 2)
+        strategic_share = round(strategic_count / len(dept_goals), 2) if dept_goals else 0.0
+        if not use_fast and scores:
+            strategic_share = round(safe_mean([item.strategic_goal_share for item in batch_results]), 2)
+        maturity_index = round(self._compute_maturity_index(avg_smart, strategic_share, len(set(g.employee_id for g in dept_goals))), 2)
+
         return DepartmentSnapshot(
             department_id=department_id,
             department_name=dept.name,
             avg_smart_score=avg_smart,
             strategic_goal_share=strategic_share,
             weakest_criterion=weakest_counter.most_common(1)[0][0] if weakest_counter else "n/a",
-            alert_count=sum(len(item.alerts) for item in batch_results),
+            alert_count=sum(1 for _ in dept_goals if _.weight and _.weight < 10),
             maturity_index=maturity_index,
             maturity_level=self._maturity_level(maturity_index),
         )
 
     def dashboard_overview(self, quarter: str, year: int) -> DashboardOverview:
-        departments = [self.dashboard_department(dep.id, quarter, year) for dep in self.store.departments.values()]
+        all_departments = list(self.store.departments.values())
+        departments = []
         total_goals = 0
-        for employee in self.store.employees.values():
-            total_goals += len(self.store.list_employee_goals(employee.id, quarter, year))
+        for dep in all_departments:
+            snapshot = self.dashboard_department(dep.id, quarter, year)
+            departments.append(snapshot)
+            # Count goals via the department goals query
+            dept_goals = self.store.list_department_goals(dep.id, quarter, year)
+            total_goals += len(dept_goals)
         return DashboardOverview(
             quarter=quarter,
             year=year,
             total_departments=len(departments),
             total_goals_evaluated=total_goals,
-            avg_smart_score=round(safe_mean([d.avg_smart_score for d in departments]), 2),
-            strategic_goal_share=round(safe_mean([d.strategic_goal_share for d in departments]), 2),
+            avg_smart_score=round(safe_mean([d.avg_smart_score for d in departments if d.avg_smart_score > 0]), 2),
+            strategic_goal_share=round(safe_mean([d.strategic_goal_share for d in departments if d.avg_smart_score > 0]), 2),
             departments=departments,
         )
 
@@ -839,23 +887,51 @@ class GoalEngine:
         if dept is None:
             raise ValueError("department not found")
 
-        all_employees = [e for e in self.store.employees.values() if e.department_id == department_id]
+        all_employees = self.store.list_employees(department_id)
         total_employees = len(all_employees)
 
-        # Evaluate all goals in the department
+        # Get all department goals in one query
         dept_goals = self.store.list_department_goals(department_id, quarter, year)
         employees_with_goals_ids: set[str] = set()
-        evaluations: list[GoalEvaluationResponse] = []
+        
+        # Use fast scoring for large datasets
+        use_fast = len(dept_goals) > 20
+
+        total_goals = len(dept_goals)
+        smart_scores = []
+        goal_types: list[str] = []
+        alignments: list[str] = []
+        criteria_sums: dict[str, float] = {"specific": 0, "measurable": 0, "achievable": 0, "relevant": 0, "timebound": 0}
 
         for goal in dept_goals:
             employees_with_goals_ids.add(goal.employee_id)
-            eval_result = self.evaluate_goal(goal.employee_id, goal.title, quarter, year)
-            evaluations.append(eval_result)
+            if use_fast:
+                bd = self._smart_breakdown(goal.title, goal.position, dept.name, None)
+                overall = round(safe_mean([bd.specific, bd.measurable, bd.achievable, bd.relevant, bd.timebound]), 2)
+                alignment = self._alignment_level(goal.title, None)
+                goal_type = self._goal_type(goal.title)
+                smart_scores.append(overall)
+                goal_types.append(goal_type)
+                alignments.append(alignment)
+                criteria_sums["specific"] += bd.specific
+                criteria_sums["measurable"] += bd.measurable
+                criteria_sums["achievable"] += bd.achievable
+                criteria_sums["relevant"] += bd.relevant
+                criteria_sums["timebound"] += bd.timebound
+            else:
+                eval_result = self.evaluate_goal(goal.employee_id, goal.title, quarter, year)
+                smart_scores.append(eval_result.overall_score)
+                goal_types.append(eval_result.goal_type)
+                alignments.append(eval_result.alignment_level)
+                criteria_sums["specific"] += eval_result.scores.specific
+                criteria_sums["measurable"] += eval_result.scores.measurable
+                criteria_sums["achievable"] += eval_result.scores.achievable
+                criteria_sums["relevant"] += eval_result.scores.relevant
+                criteria_sums["timebound"] += eval_result.scores.timebound
 
         employees_with_goals = len(employees_with_goals_ids)
-        total_goals = len(dept_goals)
 
-        if not evaluations:
+        if not smart_scores:
             return MaturityReport(
                 department_id=department_id,
                 department_name=dept.name,
@@ -868,19 +944,20 @@ class GoalEngine:
                 top_recommendations=["Нет целей для анализа. Необходимо начать процесс целеполагания."],
             )
 
+        n = len(smart_scores)
+
         # SMART distribution
         smart_dist = SmartDistribution()
-        for ev in evaluations:
-            if ev.overall_score >= 0.8:
+        for sc in smart_scores:
+            if sc >= 0.8:
                 smart_dist.excellent += 1
-            elif ev.overall_score >= 0.6:
+            elif sc >= 0.6:
                 smart_dist.good += 1
             else:
                 smart_dist.needs_improvement += 1
 
         # Goal type distribution
-        type_counter = Counter(ev.goal_type for ev in evaluations)
-        n = len(evaluations)
+        type_counter = Counter(goal_types)
         goal_type_dist = GoalTypeDistribution(
             impact_based=round(type_counter.get("impact-based", 0) / n, 2),
             output_based=round(type_counter.get("output-based", 0) / n, 2),
@@ -888,27 +965,20 @@ class GoalEngine:
         )
 
         # Alignment distribution
-        align_counter = Counter(ev.alignment_level for ev in evaluations)
+        align_counter = Counter(alignments)
         alignment_dist = AlignmentDistribution(
             strategic=round(align_counter.get("strategic", 0) / n, 2),
             functional=round(align_counter.get("functional", 0) / n, 2),
             operational=round(align_counter.get("operational", 0) / n, 2),
         )
 
-        # Weakest SMART criteria across all evaluations
-        criteria_sums: dict[str, float] = {"specific": 0, "measurable": 0, "achievable": 0, "relevant": 0, "timebound": 0}
-        for ev in evaluations:
-            criteria_sums["specific"] += ev.scores.specific
-            criteria_sums["measurable"] += ev.scores.measurable
-            criteria_sums["achievable"] += ev.scores.achievable
-            criteria_sums["relevant"] += ev.scores.relevant
-            criteria_sums["timebound"] += ev.scores.timebound
+        # Weakest SMART criteria
         criteria_avgs = {k: v / n for k, v in criteria_sums.items()}
         weakest = sorted(criteria_avgs.items(), key=lambda x: x[1])[:3]
 
         # Aggregate scores
-        avg_smart = round(safe_mean([ev.overall_score for ev in evaluations]), 2)
-        strategic_share = round(safe_mean([1.0 if ev.alignment_level == "strategic" else 0.0 for ev in evaluations]), 2)
+        avg_smart = round(safe_mean(smart_scores), 2)
+        strategic_share = round(align_counter.get("strategic", 0) / n, 2)
 
         maturity_index = round(self._compute_maturity_index(avg_smart, strategic_share, employees_with_goals), 2)
 
@@ -968,21 +1038,26 @@ class GoalEngine:
     def notifications(self, quarter: str, year: int) -> NotificationsResponse:
         """Generate notifications for managers / employees / HR based on goal quality analysis.
         
-        Optimized: limits to employees with goals + departments with activity to avoid O(N²).
+        Optimized: uses fast scoring for large datasets and limits per-department processing.
         """
         items: list[NotificationItem] = []
         idx = 0
 
-        # Pre-build employee→goals mapping for the quarter (O(N) scan)
-        emp_goals_map: dict[str, list] = {}
-        for g in self.store._goals if hasattr(self.store, '_goals') else []:
-            if g.quarter == quarter and g.year == year:
+        all_departments = list(self.store.departments.values())
+
+        for dept in all_departments:
+            dept_employees = self.store.list_employees(dept.id)
+            # Get all goals for the department in one query
+            dept_goals = self.store.list_department_goals(dept.id, quarter, year)
+            # Build employee → goals mapping
+            emp_goals_map: dict[str, list] = {}
+            for g in dept_goals:
                 emp_goals_map.setdefault(g.employee_id, []).append(g)
 
-        for dept in self.store.departments.values():
-            dept_employees = [e for e in self.store.employees.values() if e.department_id == dept.id]
+            # Limit: for large departments, only process first 50 employees for notifications
+            employees_to_process = dept_employees[:50] if len(dept_employees) > 50 else dept_employees
 
-            for emp in dept_employees:
+            for emp in employees_to_process:
                 goals = emp_goals_map.get(emp.id, [])
 
                 if not goals:
@@ -997,23 +1072,47 @@ class GoalEngine:
                     ))
                     continue
 
-                batch = self.evaluate_batch(
-                    emp.id, quarter, year,
-                    [{"title": g.title, "weight": g.weight} for g in goals],
-                )
+                # Use fast scoring for large datasets
+                use_fast = len(dept_goals) > 20
+                if use_fast:
+                    scores_list = []
+                    strat_count = 0
+                    for g in goals:
+                        sc, al, _ = self._fast_evaluate_goal_text(g.title, g.position, dept.name)
+                        scores_list.append(sc)
+                        if al == "strategic":
+                            strat_count += 1
+                    avg_smart = safe_mean(scores_list)
+                    strat_share = strat_count / len(goals) if goals else 0.0
+                    alerts_list: list[str] = []
+                    if len(goals) < 3:
+                        alerts_list.append("У сотрудника менее 3 целей на квартал.")
+                    if len(goals) > 5:
+                        alerts_list.append("У сотрудника более 5 целей на квартал.")
+                    weights = [g.weight for g in goals if g.weight is not None]
+                    if weights and abs(sum(weights) - 100.0) > 0.01:
+                        alerts_list.append("Суммарный вес целей не равен 100%.")
+                else:
+                    batch = self.evaluate_batch(
+                        emp.id, quarter, year,
+                        [{"title": g.title, "weight": g.weight} for g in goals],
+                    )
+                    avg_smart = batch.average_smart_index
+                    strat_share = batch.strategic_goal_share
+                    alerts_list = batch.alerts
 
-                if batch.average_smart_index < 0.6:
+                if avg_smart < 0.6:
                     idx += 1
                     items.append(NotificationItem(
                         id=f"notif_{idx}", severity="critical", target_role="manager",
                         employee_id=emp.id, employee_name=emp.full_name,
                         department_id=dept.id, department_name=dept.name,
                         title="Низкий индекс качества целей",
-                        message=f"Средний SMART-индекс целей сотрудника {emp.full_name}: {round(batch.average_smart_index * 100)}%. Требуется доработка формулировок.",
+                        message=f"Средний SMART-индекс целей сотрудника {emp.full_name}: {round(avg_smart * 100)}%. Требуется доработка формулировок.",
                         quarter=quarter, year=year,
                     ))
 
-                if batch.strategic_goal_share < 0.3:
+                if strat_share < 0.3:
                     idx += 1
                     items.append(NotificationItem(
                         id=f"notif_{idx}", severity="warning", target_role="employee",
@@ -1024,7 +1123,7 @@ class GoalEngine:
                         quarter=quarter, year=year,
                     ))
 
-                for alert_text in batch.alerts:
+                for alert_text in alerts_list:
                     idx += 1
                     sev = "critical" if "менее 3" in alert_text.lower() or "не равен 100" in alert_text.lower() else "warning"
                     items.append(NotificationItem(
@@ -1036,8 +1135,8 @@ class GoalEngine:
                         quarter=quarter, year=year,
                     ))
 
-            # Department-level maturity check (use cached evaluation data)
-            dept_emp_with_goals = [e for e in dept_employees if e.id in emp_goals_map]
+            # Department-level maturity check
+            dept_emp_with_goals = [e for e in employees_to_process if e.id in emp_goals_map]
             if not dept_emp_with_goals:
                 idx += 1
                 items.append(NotificationItem(

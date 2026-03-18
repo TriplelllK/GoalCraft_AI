@@ -2,23 +2,30 @@
 
 Поместите `.sql` дамп от организаторов хакатона в эту папку.
 
+## Формат дампа
+
+Файл `mock_smart_1.sql` — PostgreSQL custom-format дамп (PGDMP).
+Для его загрузки используется `pg_restore`, а НЕ `psql -f`.
+
 ## Загрузка дампа
 
 ### Вариант 1: Docker (автоматически)
-Файл `.sql` будет автоматически загружен PostgreSQL при первом запуске:
+Файл будет автоматически загружен через `pg_restore` при первом запуске:
 ```bash
-cp /path/to/hackathon_dump.sql data/
+cp /path/to/mock_smart_1.sql data/
 docker compose up --build
 ```
 
-### Вариант 2: Ручная загрузка
+### Вариант 2: Python скрипт (локально)
 ```bash
-psql -U postgres -d hr_goal_ai -f data/hackathon_dump.sql
+# Убедитесь, что PostgreSQL запущен и БД создана
+createdb -U postgres hr_goal_ai
+python scripts/load_dump.py data/mock_smart_1.sql
 ```
 
-### Вариант 3: Через скрипт
+### Вариант 3: pg_restore напрямую
 ```bash
-python scripts/load_dump.py data/hackathon_dump.sql
+pg_restore --no-owner --no-privileges -U postgres -d hr_goal_ai data/mock_smart_1.sql
 ```
 
 ### Проверка загрузки

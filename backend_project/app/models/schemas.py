@@ -112,6 +112,7 @@ class GoalReview(BaseModel):
     goal_id: str
     reviewer_id: str = ""
     verdict: str = ""
+    comment_text: str = ""
     created_at: str = ""
 
 

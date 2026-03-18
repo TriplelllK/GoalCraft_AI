@@ -42,42 +42,86 @@ def get_db_params() -> dict:
     }
 
 
+def _is_pgdmp(sql_path: str) -> bool:
+    """Check if file is a PostgreSQL custom-format dump (PGDMP header)."""
+    try:
+        with open(sql_path, "rb") as f:
+            return f.read(5) == b"PGDMP"
+    except Exception:
+        return False
+
+
 def load_sql_file(sql_path: str, params: dict) -> bool:
-    """Load a .sql file using psql."""
+    """Load a .sql file using pg_restore (PGDMP) or psql (plain SQL)."""
     if "url" in params:
-        cmd = ["psql", params["url"], "-f", sql_path]
+        from urllib.parse import urlparse
+        p = urlparse(params["url"])
+        host = p.hostname or "localhost"
+        port = str(p.port or 5432)
+        user = p.username or "postgres"
+        password = p.password or "postgres"
+        dbname = p.path.lstrip("/") or "hr_goal_ai"
+    else:
+        host = params["host"]
+        port = params["port"]
+        user = params["user"]
+        password = params["password"]
+        dbname = params["dbname"]
+
+    env = os.environ.copy()
+    env["PGPASSWORD"] = password
+
+    use_pg_restore = _is_pgdmp(sql_path)
+
+    if use_pg_restore:
+        cmd = [
+            "pg_restore",
+            "--no-owner",
+            "--no-privileges",
+            "-h", host,
+            "-p", port,
+            "-U", user,
+            "-d", dbname,
+            sql_path,
+        ]
+        tool_name = "pg_restore"
     else:
         cmd = [
             "psql",
-            "-h", params["host"],
-            "-p", params["port"],
-            "-U", params["user"],
-            "-d", params["dbname"],
+            "-h", host,
+            "-p", port,
+            "-U", user,
+            "-d", dbname,
             "-f", sql_path,
         ]
-        env = os.environ.copy()
-        env["PGPASSWORD"] = params["password"]
+        tool_name = "psql"
 
+    print(f"[*] Формат дампа: {'PGDMP (custom)' if use_pg_restore else 'Plain SQL'}")
     print(f"[*] Загрузка дампа: {sql_path}")
-    print(f"[*] Команда: {' '.join(cmd)}")
+    print(f"[*] Команда: {tool_name} → {dbname}@{host}:{port}")
 
     try:
         result = subprocess.run(
             cmd,
-            env=env if "url" not in params else None,
+            env=env,
             capture_output=True,
             text=True,
             timeout=300,
         )
+        # pg_restore returns non-zero on warnings too, check stderr for real errors
         if result.returncode != 0:
-            print(f"[!] Ошибка psql (код {result.returncode}):")
+            if use_pg_restore and "ERROR" not in result.stderr:
+                print(f"[✓] Дамп загружен (pg_restore с предупреждениями — это нормально)")
+                return True
+            print(f"[!] Ошибка {tool_name} (код {result.returncode}):")
             print(result.stderr[:2000])
             return False
         print("[✓] Дамп успешно загружен")
         return True
     except FileNotFoundError:
-        print("[!] psql не найден. Установите PostgreSQL client или используйте Docker.")
-        print("    Альтернатива: psql -U postgres -d hr_goal_ai -f dump.sql")
+        print(f"[!] {tool_name} не найден. Установите PostgreSQL client.")
+        if use_pg_restore:
+            print("    pg_restore поставляется вместе с PostgreSQL.")
         return False
     except subprocess.TimeoutExpired:
         print("[!] Таймаут загрузки дампа (300с)")

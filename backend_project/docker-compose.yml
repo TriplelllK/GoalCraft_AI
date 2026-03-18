@@ -20,7 +20,8 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./data:/docker-entrypoint-initdb.d  # Auto-load .sql dumps on first start
+      - ./data:/data                                          # Dump files accessible inside container
+      - ./scripts/init_db.sh:/docker-entrypoint-initdb.d/01_restore.sh  # Auto-restore PGDMP dump
   qdrant:
     image: qdrant/qdrant:latest
     ports:
