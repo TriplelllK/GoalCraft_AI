@@ -1,600 +1,560 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>GoalCraft AI — Презентация</title>
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/white.css">
+<title>GoalCraft AI — Презентация (PDF)</title>
 <style>
-  :root {
-    --r-heading-color: #1a1a2e;
-    --r-main-color: #333;
-    --r-link-color: #16213e;
+  /* ── PDF-optimized print layout ── */
+  @page { size: A4 landscape; margin: 12mm; }
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .slide { page-break-after: always; box-shadow: none !important; margin: 0 !important; padding: 20px !important; }
+    .slide:last-child { page-break-after: avoid; }
+    .no-print { display: none !important; }
   }
-  .reveal { font-size: 28px; }
-  .reveal h1 { font-size: 2.2em; color: #1a1a2e; }
-  .reveal h2 { font-size: 1.6em; color: #16213e; border-bottom: 3px solid #0f3460; padding-bottom: 10px; }
-  .reveal h3 { font-size: 1.2em; color: #0f3460; }
-  .reveal table { font-size: 0.65em; margin: 0 auto; border-collapse: collapse; }
-  .reveal table th { background: #0f3460; color: white; padding: 8px 14px; }
-  .reveal table td { padding: 6px 14px; border: 1px solid #ddd; }
-  .reveal table tr:nth-child(even) { background: #f0f4ff; }
-  .reveal pre { font-size: 0.55em; width: 95%; }
-  .reveal code { font-family: 'Cascadia Code', 'Fira Code', monospace; }
-  .reveal .emoji { font-size: 1.3em; }
-  .reveal ul { font-size: 0.85em; }
-  .reveal li { margin-bottom: 8px; }
-  .badge-green { background: #22c55e; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; }
-  .badge-blue { background: #3b82f6; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; }
-  .badge-orange { background: #f59e0b; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; }
-  .badge-purple { background: #8b5cf6; color: white; padding: 3px 10px; border-radius: 12px; font-size: 0.75em; font-weight: bold; }
-  .big-number { font-size: 3em; font-weight: bold; color: #0f3460; }
+
+  /* ── Base styles ── */
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #1a1a2e; background: #f5f5f5; line-height: 1.5; }
+
+  .slide {
+    width: 297mm; min-height: 210mm; max-height: 210mm;
+    background: white; margin: 10px auto; padding: 28px 36px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+    overflow: hidden; position: relative;
+    page-break-inside: avoid;
+  }
+  .slide-dark {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+    color: white;
+  }
+  .slide-dark h1, .slide-dark h2, .slide-dark h3, .slide-dark p { color: white; }
+
+  h1 { font-size: 2em; color: #1a1a2e; margin-bottom: 8px; }
+  h2 { font-size: 1.55em; color: #16213e; border-bottom: 3px solid #0f3460; padding-bottom: 6px; margin-bottom: 14px; }
+  h3 { font-size: 1.1em; color: #0f3460; margin-bottom: 6px; }
+  p { font-size: 0.85em; }
+  ul { font-size: 0.82em; margin-left: 18px; }
+  li { margin-bottom: 4px; }
+
+  table { font-size: 0.7em; border-collapse: collapse; width: 100%; margin-top: 6px; }
+  th { background: #0f3460; color: white; padding: 6px 10px; text-align: left; }
+  td { padding: 5px 10px; border: 1px solid #ddd; }
+  tr:nth-child(even) { background: #f0f4ff; }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+
+  .card { border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; }
+  .card-blue { border-color: #3b82f6; }
+  .card-green { border-color: #22c55e; }
+  .card-purple { border-color: #8b5cf6; }
+
   .metric-card {
-    display: inline-block; background: #f0f4ff; border-radius: 16px;
-    padding: 20px 30px; margin: 10px; text-align: center;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08); min-width: 160px;
+    display: inline-block; background: #f0f4ff; border-radius: 12px;
+    padding: 14px 22px; text-align: center;
+    min-width: 130px; margin: 4px;
   }
-  .metric-card .value { font-size: 2.2em; font-weight: bold; color: #0f3460; }
-  .metric-card .label { font-size: 0.7em; color: #666; margin-top: 5px; }
-  .arch-box {
-    background: #f8fafc; border: 2px solid #e2e8f0; border-radius: 12px;
-    padding: 15px; margin: 8px; display: inline-block; min-width: 200px;
-  }
+  .metric-card .value { font-size: 2em; font-weight: bold; color: #0f3460; }
+  .metric-card .label { font-size: 0.65em; color: #666; margin-top: 3px; }
+  .metric-card-dark { background: rgba(255,255,255,0.1); }
+  .metric-card-dark .value { color: #60a5fa; }
+  .metric-card-dark .label { color: #94a3b8; }
+
   .problem-card {
-    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-    border-radius: 12px; padding: 20px; margin: 10px 0;
-    border-left: 5px solid #dc2626;
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    border-radius: 10px; padding: 14px; border-left: 5px solid #dc2626;
   }
   .solution-card {
-    background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-    border-radius: 12px; padding: 20px; margin: 10px 0;
-    border-left: 5px solid #16a34a;
+    background: linear-gradient(135deg, #dcfce7, #bbf7d0);
+    border-radius: 10px; padding: 14px; border-left: 5px solid #16a34a;
   }
-  .slide-title-page {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%) !important;
-    color: white !important;
-  }
-  .slide-title-page h1, .slide-title-page h2, .slide-title-page h3, .slide-title-page p {
-    color: white !important;
-  }
-  .flow-step {
-    display: inline-block; background: #eff6ff; border: 2px solid #3b82f6;
-    border-radius: 10px; padding: 10px 16px; margin: 5px; font-size: 0.75em;
-  }
-  .flow-arrow { font-size: 1.5em; color: #3b82f6; vertical-align: middle; }
-  .check { color: #16a34a; font-weight: bold; }
-  .cross { color: #dc2626; font-weight: bold; }
   .highlight-box {
-    background: #eff6ff; border: 2px solid #3b82f6; border-radius: 12px;
-    padding: 15px 20px; margin: 10px 0;
+    background: #eff6ff; border: 1.5px solid #3b82f6; border-radius: 10px;
+    padding: 10px 14px; margin-top: 8px; font-size: 0.8em;
   }
-  .two-col { display: flex; gap: 30px; align-items: flex-start; }
-  .two-col > div { flex: 1; }
-  .three-col { display: flex; gap: 20px; align-items: flex-start; }
-  .three-col > div { flex: 1; }
-  .reveal .slides section { padding: 20px; }
+  .badge { padding: 3px 10px; border-radius: 12px; font-size: 0.72em; font-weight: bold; color: white; display: inline-block; }
+  .badge-green { background: #22c55e; }
+  .badge-blue { background: #3b82f6; }
+  .badge-purple { background: #8b5cf6; }
+  .badge-orange { background: #f59e0b; }
+  .check { color: #16a34a; font-weight: bold; }
+  pre { background: #f8fafc; padding: 10px; border-radius: 8px; font-size: 0.72em; overflow: hidden; }
+  code { font-family: 'Cascadia Code', 'Fira Code', Consolas, monospace; }
+  .flow-step { display: inline-block; background: #eff6ff; border: 2px solid #3b82f6; border-radius: 8px; padding: 6px 12px; font-size: 0.72em; margin: 3px; }
+  .flow-arrow { font-size: 1.4em; color: #3b82f6; vertical-align: middle; }
+  .footer { position: absolute; bottom: 10px; right: 20px; font-size: 0.6em; color: #999; }
 </style>
 </head>
 <body>
-<div class="reveal">
-<div class="slides">
 
-<!-- ═══════════════════════ ТИТУЛЬНЫЙ СЛАЙД ═══════════════════════ -->
-<section data-background="linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)">
-  <h1 style="color:white; font-size:2.5em;">🎯 GoalCraft AI</h1>
-  <h3 style="color:#93c5fd;">HR Performance Management Platform</h3>
-  <p style="color:#cbd5e1; font-size:0.9em; margin-top: 30px;">
-    Интеллектуальная платформа для оценки, генерации и управления<br>
-    рабочими целями сотрудников по методологии <strong style="color:#60a5fa;">SMART + OKR</strong>
-  </p>
-  <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:12px; margin-top:30px;">
-    <span class="badge-blue" style="font-size:0.65em;">Python 3.11+ / FastAPI</span>
-    <span class="badge-green" style="font-size:0.65em;">React 18 / TypeScript</span>
-    <span class="badge-purple" style="font-size:0.65em;">GPT-4o-mini</span>
-    <span class="badge-orange" style="font-size:0.65em;">8 275 LOC</span>
-  </div>
-  <p style="color:#64748b; font-size:0.7em; margin-top:25px;">
-    Хакатон «Внедрение ИИ в HR-процессы» • 2026
-  </p>
-</section>
-
-<!-- ═══════════════════════ СЛАЙД 2: КЛЮЧЕВЫЕ МЕТРИКИ ═══════════════════════ -->
-<section>
-  <h2>📊 Проект в цифрах</h2>
-  <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px;">
-    <div class="metric-card">
-      <div class="value" style="color:#16a34a;">99%</div>
-      <div class="label">SMART-accuracy<br>(100 целей)</div>
+<!-- СЛАЙД 1: ТИТУЛЬНЫЙ -->
+<section class="slide slide-dark">
+  <div style="text-align:center; padding-top: 30px;">
+    <h1 style="font-size:2.6em;">&#127919; GoalCraft AI</h1>
+    <h3 style="color:#93c5fd; margin-top:8px;">HR Performance Management Platform</h3>
+    <p style="color:#cbd5e1; font-size:0.9em; margin-top:20px;">
+      Интеллектуальная платформа для оценки, генерации и управления<br>
+      рабочими целями сотрудников по методологии <strong style="color:#60a5fa;">SMART + OKR</strong>
+    </p>
+    <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:10px; margin-top:24px;">
+      <span class="badge badge-blue">Python 3.11+ / FastAPI</span>
+      <span class="badge badge-green">React 18 / TypeScript</span>
+      <span class="badge badge-purple">GPT-4o-mini / RAG</span>
+      <span class="badge badge-orange">PostgreSQL 17 + Qdrant</span>
     </div>
-    <div class="metric-card">
-      <div class="value" style="color:#16a34a;">251</div>
-      <div class="label">Автоматических<br>тестов</div>
-    </div>
-    <div class="metric-card">
-      <div class="value" style="color:#0f3460;">16</div>
-      <div class="label">REST API<br>эндпоинтов</div>
-    </div>
-    <div class="metric-card">
-      <div class="value" style="color:#0f3460;">5</div>
-      <div class="label">Страниц<br>SPA-интерфейса</div>
-    </div>
-    <div class="metric-card">
-      <div class="value" style="color:#8b5cf6;">40</div>
-      <div class="label">Pydantic<br>моделей</div>
-    </div>
-    <div class="metric-card">
-      <div class="value" style="color:#f59e0b;">13</div>
-      <div class="label">Таблиц БД<br>(§4.2)</div>
-    </div>
-  </div>
-  <div class="highlight-box" style="font-size:0.75em; margin-top:15px; text-align:center;">
-    <b>8 275 LOC</b> (6 757 Python + 1 518 TypeScript) • <b>48 файлов</b> • <b>7 тестовых сьютов</b> • <b>99.6% pass rate</b>
+    <p style="color:#64748b; font-size:0.75em; margin-top:30px;">
+      Хакатон &laquo;Внедрение ИИ в HR-процессы&raquo; &bull; Март 2026<br>
+      47 857 записей в БД &bull; 13 таблиц &sect;4.2 &bull; 12 API-эндпоинтов &bull; 251 тест
+    </p>
   </div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 3: ПРОБЛЕМА ═══════════════════════ -->
-<section>
-  <h2>📌 Проблема</h2>
+<!-- СЛАЙД 2: ПРОЕКТ В ЦИФРАХ -->
+<section class="slide">
+  <h2>&#128202; Проект в цифрах</h2>
+  <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:8px; margin-top:10px;">
+    <div class="metric-card"><div class="value" style="color:#16a34a;">99%</div><div class="label">SMART-accuracy<br>(100 целей)</div></div>
+    <div class="metric-card"><div class="value" style="color:#16a34a;">251</div><div class="label">Автоматических<br>тестов</div></div>
+    <div class="metric-card"><div class="value" style="color:#0f3460;">16</div><div class="label">REST API<br>эндпоинтов</div></div>
+    <div class="metric-card"><div class="value" style="color:#0f3460;">47K+</div><div class="label">Записей<br>в БД (&sect;4.2)</div></div>
+    <div class="metric-card"><div class="value" style="color:#8b5cf6;">30</div><div class="label">Pydantic<br>моделей</div></div>
+    <div class="metric-card"><div class="value" style="color:#f59e0b;">13</div><div class="label">Таблиц БД<br>(&sect;4.2)</div></div>
+  </div>
+  <div class="highlight-box" style="text-align:center; margin-top:12px;">
+    <b>8 275 LOC</b> (Python + TypeScript) &bull; <b>48 файлов</b> &bull; <b>7 тестовых сьютов</b> &bull; <b>99.6% pass rate</b><br>
+    <b>mock_smart_1.sql</b>: PGDMP-дамп, 2.7 MB &mdash; 450 сотрудников, 9 000 целей, 160 документов ВНД
+  </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
+</section>
+
+<!-- СЛАЙД 3: ПРОБЛЕМА -->
+<section class="slide">
+  <h2>&#128204; Проблема</h2>
   <div class="problem-card" style="text-align:left;">
-    <strong>Постановка целей в крупных компаниях — хаотичный процесс:</strong>
-    <ul style="margin-top:12px; font-size:0.85em;">
-      <li>Руководители формулируют цели <b>размыто</b> — «улучшить работу отдела», «повысить эффективность»</li>
-      <li>Нет <b>объективной оценки</b> качества целей — каждый HR судит субъективно</li>
-      <li>Цели <b>не связаны</b> со стратегией компании и внутренними нормативными документами (ВНД)</li>
-      <li>Нет <b>каскадирования</b> — цели руководителя не декомпозируются на подчинённых</li>
+    <strong>Постановка целей в крупных компаниях &mdash; хаотичный процесс:</strong>
+    <ul style="margin-top:8px;">
+      <li>Руководители формулируют цели <b>размыто</b> &mdash; &laquo;улучшить работу отдела&raquo;, &laquo;повысить эффективность&raquo;</li>
+      <li>Нет <b>объективной оценки</b> качества целей &mdash; каждый HR судит субъективно</li>
+      <li>Цели <b>не связаны</b> со стратегией компании и ВНД</li>
+      <li>Нет <b>каскадирования</b> &mdash; цели руководителя не декомпозируются на подчинённых</li>
       <li><b>Дублирование</b> целей между сотрудниками и кварталами</li>
-      <li>Нет <b>аналитики</b> по подразделениям — непонятно, кто ставит хорошие цели, а кто нет</li>
+      <li>Нет <b>аналитики</b> зрелости целеполагания по подразделениям</li>
     </ul>
   </div>
-  <div class="highlight-box" style="font-size:0.8em; margin-top:15px;">
-    💡 <b>Масштаб:</b> ~450 сотрудников, ~8 подразделений, ~9 000 целей в год, 13 таблиц данных (§4.2)
+  <div class="highlight-box" style="margin-top:10px;">
+    &#128161; <b>Масштаб данных хакатона (mock_smart_1.sql):</b> 450 сотрудников, 8 подразделений, 9 000 целей, 160 документов, 30 789 событий
   </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 4: РЕШЕНИЕ ═══════════════════════ -->
-<section>
-  <h2>💡 Наше решение</h2>
+<!-- СЛАЙД 4: РЕШЕНИЕ -->
+<section class="slide">
+  <h2>&#128161; Наше решение: GoalCraft AI</h2>
   <div class="solution-card" style="text-align:left;">
-    <strong>GoalCraft AI — гибридная AI-система (8 275 строк кода):</strong>
-    <ul style="margin-top:12px; font-size:0.85em;">
-      <li><b>Автоматическая SMART-оценка</b> любой цели за секунду (score 0.0 – 1.0, точность 99%)</li>
-      <li><b>AI-генерация</b> 3–5 целей для конкретной должности с привязкой к ВНД</li>
+    <strong>Гибридная AI-система (8 275 строк кода):</strong>
+    <ul style="margin-top:8px;">
+      <li><b>Автоматическая SMART-оценка</b> любой цели за секунду (score 0.0 &ndash; 1.0, точность 99%)</li>
+      <li><b>AI-генерация</b> 3&ndash;5 целей для конкретной должности с привязкой к ВНД (RAG)</li>
       <li><b>Переформулировка</b> слабых целей в SMART-совместимые</li>
-      <li><b>OKR-маппинг</b> — привязка целей к Objectives & Key Results</li>
-      <li><b>Каскадирование</b> от руководителя ко всем подчинённым</li>
-      <li><b>Alert Manager</b> — 6 типов уведомлений (critical / warning) для менеджеров и HR</li>
-      <li><b>Аналитика</b> — дашборд + индекс зрелости + история изменений (F-15)</li>
+      <li><b>OKR-маппинг</b> &mdash; привязка целей к Objectives &amp; Key Results</li>
+      <li><b>Каскадирование</b> от руководителя ко всем подчинённым (F-14)</li>
+      <li><b>Alert Manager</b> &mdash; 6 типов уведомлений (critical / warning)</li>
+      <li><b>Дашборд зрелости</b> &mdash; индекс зрелости целеполагания по подразделениям (F-22)</li>
     </ul>
   </div>
-  <p style="font-size:0.8em; color:#666; margin-top:15px;">
-    Гибридный подход: <span class="badge-blue">Детерминированные правила (313 строк)</span> +
-    <span class="badge-green">LLM (GPT-4o-mini)</span> +
-    <span class="badge-purple">RAG Hybrid Search</span>
+  <p style="font-size:0.8em; color:#666; margin-top:10px;">
+    Гибридный подход: <span class="badge badge-blue">Правила (313 строк)</span>
+    <span class="badge badge-green">LLM GPT-4o-mini</span>
+    <span class="badge badge-purple">RAG Hybrid Search</span>
   </p>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 5: АРХИТЕКТУРА ═══════════════════════ -->
-<section>
-  <h2>🏗️ Архитектура системы</h2>
-  <div style="font-size:0.6em; line-height:1.6;">
-<pre style="background:#f8fafc; text-align:left; padding:15px; border-radius:10px; font-size:1.1em;"><code>
-┌──────────────────────────────────────────────────────────────────┐
-│               React 18 + TypeScript + Vite (SPA)                 │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌────────┐   │
-│  │Dashboard │ │ Evaluate │ │ Generate │ │ Cascade │ │Maturity│   │
-│  └──────────┘ └──────────┘ └──────────┘ └─────────┘ └────────┘   │
-└───────────────────────────┬──────────────────────────────────────┘
-                            │ HTTP REST API (JSON, Vite proxy)
-┌───────────────────────────┼──────────────────────────────────────┐
-│              FastAPI Backend — 16 endpoints                      │
-│  ┌────────────────────────┴───────────────────────────────────┐  │
-│  │              API Router (routes.py, 228 строк)             │  │
-│  │  /health  /evaluate  /generate  /rewrite  /batch           │  │
-│  │  /cascade /dashboard /maturity /notifications /ingest      │  │
-│  │  /history /data/stats /departments /employees /context     │  │
-│  └────────────────────────┬───────────────────────────────────┘  │
-│  ┌────────────────────────┴───────────────────────────────────┐  │
-│  │           GoalEngine (engine.py, 1 114 строк)              │  │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────┐    │  │
-│  │  │ SMART Rules  │  │  LLM Service │  │  RAG / Vector  │    │  │
-│  │  │ (rules.py)   │  │  (llm.py)    │  │  Hybrid Search │    │  │
-│  │  │ 313 строк    │  │  GPT-4o-mini │  │  229 строк     │    │  │
-│  │  │ Deterministic│  │  210 строк   │  │  N-gram + BM25 │    │  │
-│  │  └──────────────┘  └──────────────┘  └────────────────┘    │  │
-│  └────────────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────┐  ┌───────────────────────────────┐     │
-│  │   Storage Layer      │  │    Vector Store Layer         │     │
-│  │ Memory (503) / PG    │  │  Memory (229) / Qdrant (175)  │     │
-│  │        (569 строк)   │  │                               │     │
-│  └──────────────────────┘  └───────────────────────────────┘     │
-└──────────────────────────────────────────────────────────────────┘
-</code></pre>
+<!-- СЛАЙД 5: АРХИТЕКТУРА -->
+<section class="slide">
+  <h2>&#127959; Архитектура системы</h2>
+  <pre style="font-size:0.65em; line-height:1.5;"><code>+-------------------------------------------------------------+
+|            React 18 + TypeScript + Vite (SPA)               |
+|  Dashboard | Evaluate | Generate | Cascade | Maturity       |
++---------------------------+---------------------------------+
+                            | HTTP REST API (JSON)
++---------------------------+---------------------------------+
+|            FastAPI Backend -- 16 endpoints                   |
+|  +------------------------+------------------------------+  |
+|  |            API Router (routes.py)                     |  |
+|  +------------------------+------------------------------+  |
+|  +------------------------+------------------------------+  |
+|  |         GoalEngine (engine.py, 1 114 строк)           |  |
+|  |  +-------------+ +-------------+ +----------------+  |  |
+|  |  | SMART Rules | | LLM Service | | RAG / Vector   |  |  |
+|  |  | (rules.py)  | | GPT-4o-mini | | N-gram + BM25  |  |  |
+|  |  | 313 строк   | | 210 строк   | | 229 строк      |  |  |
+|  |  +-------------+ +-------------+ +----------------+  |  |
+|  +-------------------------------------------------------+  |
+|  +------------------+  +------------------------------+     |
+|  |  Storage Layer   |  |  Vector Store Layer          |     |
+|  |  Memory / PG 17  |  |  Memory / Qdrant             |     |
+|  +------------------+  +------------------------------+     |
++-------------------------------------------------------------+
+   PostgreSQL 17 (13 таблиц, 47K+ записей -- mock_smart_1.sql)</code></pre>
+  <div class="highlight-box" style="margin-top:6px;">
+    <b>Dual-mode:</b> Demo (in-memory, zero-config) &harr; Production (PostgreSQL + Qdrant + LLM). Переключение через env vars.
   </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 6: ТЕХНИЧЕСКИЙ СТЕК ═══════════════════════ -->
-<section>
-  <h2>⚙️ Технический стек</h2>
+<!-- СЛАЙД 6: ТЕХ.СТЕК -->
+<section class="slide">
+  <h2>&#9881; Технический стек (&sect;4.1)</h2>
   <table>
-    <thead>
-      <tr><th>Компонент</th><th>Технология</th><th>Обоснование</th></tr>
-    </thead>
+    <thead><tr><th>Компонент</th><th>Технология</th><th>Обоснование</th></tr></thead>
     <tbody>
-      <tr><td><b>Backend</b></td><td>FastAPI (Python 3.11+)</td><td>Async, Swagger автодокументация, type-safe, 16 эндпоинтов</td></tr>
-      <tr><td><b>Frontend</b></td><td>React 18 + TypeScript + Vite + Recharts</td><td>SPA: 5 страниц, 7 компонентов, интерактивные графики</td></tr>
-      <tr><td><b>AI / LLM</b></td><td>OpenAI GPT-4o-mini</td><td>Высокое качество на русском языке + graceful degradation</td></tr>
-      <tr><td><b>SMART-оценка</b></td><td>Rule-based engine (313 строк)</td><td>Детерминированный, 99% accuracy, 100% воспроизводимый</td></tr>
-      <tr><td><b>RAG-поиск</b></td><td>N-gram (512d) + BM25 hybrid</td><td>Zero-dependency, ~1000× быстрее BERT, offline-ready</td></tr>
-      <tr><td><b>БД (prod)</b></td><td>PostgreSQL 17 (13 таблиц)</td><td>Production-ready, Docker Compose, 47K+ записей</td></tr>
-      <tr><td><b>Вектор. хранилище</b></td><td>Qdrant + Memory fallback</td><td>REST API, Docker, RAG-поиск по ВНД</td></tr>
-      <tr><td><b>Контейнеризация</b></td><td>Docker + Docker Compose</td><td>3 сервиса: API + PostgreSQL + Qdrant</td></tr>
-      <tr><td><b>Модели данных</b></td><td>40 Pydantic-моделей (397 строк)</td><td>Полная типизация, OpenAPI schema, JSON validation</td></tr>
+      <tr><td><b>Backend</b></td><td>FastAPI + Pydantic v2</td><td>Async, Swagger автодокументация, 16 эндпоинтов</td></tr>
+      <tr><td><b>Frontend</b></td><td>React 18 + TypeScript + Vite + Recharts</td><td>SPA: 5 страниц, интерактивные графики</td></tr>
+      <tr><td><b>LLM</b></td><td>OpenAI GPT-4o-mini</td><td>Качество на русском + graceful degradation без ключа</td></tr>
+      <tr><td><b>SMART-оценка</b></td><td>Rule-based engine (313 строк)</td><td>Детерминированный, 99% accuracy, offline-ready</td></tr>
+      <tr><td><b>RAG-поиск</b></td><td>N-gram hash (512d) + BM25 hybrid</td><td>Zero-dependency, ~1000x быстрее BERT, offline-ready</td></tr>
+      <tr><td><b>БД</b></td><td>PostgreSQL 17</td><td>13 таблиц, 47K+ записей, PGDMP дамп организатора</td></tr>
+      <tr><td><b>Векторное хранилище</b></td><td>Qdrant + Memory fallback</td><td>REST API, Docker, RAG по ВНД</td></tr>
+      <tr><td><b>Embeddings</b></td><td>N-gram + sentence-transformers (опц.)</td><td>Multilingual, поддержка русского языка</td></tr>
+      <tr><td><b>Deploy</b></td><td>Docker Compose (4 сервиса)</td><td>API + PostgreSQL + Qdrant + Frontend</td></tr>
     </tbody>
   </table>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 7: ГИБРИДНЫЙ ПОДХОД ═══════════════════════ -->
-<section>
-  <h2>🧠 Гибридный подход: 3 модуля</h2>
-  <div class="three-col" style="font-size:0.8em;">
-    <div>
-      <div class="arch-box" style="border-color:#3b82f6; width:95%;">
-        <h3 style="color:#3b82f6; margin-top:0; font-size:1em;">📐 Rule-based</h3>
-        <ul style="font-size:0.75em; text-align:left;">
-          <li><b>SMART-оценка</b> по 5 критериям</li>
-          <li>40+ глаголов действия</li>
-          <li>60+ объектов HR-домена</li>
-          <li>Regex для метрик/дат</li>
-          <li><b>313 строк</b>, 99% accuracy</li>
-          <li><b>Всегда доступен</b></li>
-        </ul>
-      </div>
+<!-- СЛАЙД 7: ГИБРИДНЫЙ ПОДХОД -->
+<section class="slide">
+  <h2>&#129504; Гибридный подход: 3 модуля</h2>
+  <div class="grid3">
+    <div class="card card-blue">
+      <h3 style="color:#3b82f6;">&#128208; Rule-based SMART</h3>
+      <ul style="font-size:0.72em;">
+        <li>Оценка по 5 критериям S/M/A/R/T</li>
+        <li>40+ глаголов действия (RU)</li>
+        <li>60+ объектов HR-домена + ИТ</li>
+        <li>Regex для метрик/дат</li>
+        <li><b>313 строк, 99% accuracy</b></li>
+        <li>Всегда доступен (offline)</li>
+      </ul>
     </div>
-    <div>
-      <div class="arch-box" style="border-color:#22c55e; width:95%;">
-        <h3 style="color:#22c55e; margin-top:0; font-size:1em;">🤖 LLM модуль</h3>
-        <ul style="font-size:0.75em; text-align:left;">
-          <li><b>Генерация</b> целей</li>
-          <li><b>Переписывание</b> слабых</li>
-          <li><b>OKR-маппинг</b></li>
-          <li>GPT-4o-mini (210 строк)</li>
-          <li><b>Graceful degradation:</b><br>нет ключа → fallback</li>
-        </ul>
-      </div>
+    <div class="card card-green">
+      <h3 style="color:#22c55e;">&#129302; LLM модуль</h3>
+      <ul style="font-size:0.72em;">
+        <li>Генерация целей по должности</li>
+        <li>Переформулировка слабых целей</li>
+        <li>OKR-маппинг + рекомендации</li>
+        <li>GPT-4o-mini (210 строк)</li>
+        <li><b>Graceful degradation:</b><br>нет ключа &rarr; rule-based fallback</li>
+      </ul>
     </div>
-    <div>
-      <div class="arch-box" style="border-color:#8b5cf6; width:95%;">
-        <h3 style="color:#8b5cf6; margin-top:0; font-size:1em;">🔍 RAG Pipeline</h3>
-        <ul style="font-size:0.75em; text-align:left;">
-          <li>Sentence-aware chunking</li>
-          <li>N-gram hashing (512d)</li>
-          <li>BM25 scoring</li>
-          <li>Hybrid: cosine×0.40<br>+ BM25×0.35 + KW×0.15<br>+ doc_type×0.10</li>
-          <li><b>229 строк</b>, offline</li>
-        </ul>
-      </div>
+    <div class="card card-purple">
+      <h3 style="color:#8b5cf6;">&#128269; RAG Pipeline</h3>
+      <ul style="font-size:0.72em;">
+        <li>Sentence-aware chunking (300/50)</li>
+        <li>N-gram hashing (512d)</li>
+        <li>BM25 scoring + keyword boost</li>
+        <li>Hybrid: cosine&times;0.40 + BM25&times;0.35<br>+ keyword&times;0.15 + doc_type&times;0.10</li>
+        <li><b>229 строк, offline-ready</b></li>
+      </ul>
     </div>
   </div>
-  <div class="highlight-box" style="font-size:0.75em; margin-top:15px;">
-    ✅ Система полностью работоспособна <b>без LLM</b> (rule-based) и <b>с LLM</b> (расширенный режим)
+  <div class="highlight-box" style="margin-top:10px;">
+    &#10004; Система полностью работоспособна <b>без LLM</b> (rule-based) и <b>с LLM</b> (расширенный режим). Индексирует все 160 документов ВНД из дампа.
   </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 8: API ЭНДПОИНТЫ ═══════════════════════ -->
-<section>
-  <h2>🔌 API: 16 эндпоинтов</h2>
-  <table>
-    <thead>
-      <tr><th>Метод</th><th>Эндпоинт</th><th>Функция</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>GET</td><td>/health</td><td>Статус, режим, LLM, кол-во документов</td></tr>
-      <tr><td>GET</td><td>/api/v1/departments</td><td>Список всех подразделений</td></tr>
-      <tr><td>GET</td><td>/api/v1/employees</td><td>Список сотрудников (фильтр по dept)</td></tr>
-      <tr><td>POST</td><td>/api/v1/goals/evaluate</td><td>SMART-оценка одной цели</td></tr>
-      <tr><td>POST</td><td>/api/v1/goals/rewrite</td><td>Переформулировка слабой цели</td></tr>
-      <tr><td>POST</td><td>/api/v1/goals/generate</td><td>Генерация 3–5 целей по должности</td></tr>
-      <tr><td>POST</td><td>/api/v1/goals/evaluate-batch</td><td>Пакетная оценка за квартал</td></tr>
-      <tr><td>POST</td><td>/api/v1/goals/cascade</td><td>Каскадирование от руководителя</td></tr>
-      <tr><td>GET</td><td>/api/v1/dashboard/overview</td><td>Дашборд по всем подразделениям</td></tr>
-      <tr><td>GET</td><td>/api/v1/dashboard/{id}</td><td>Детали одного подразделения</td></tr>
-      <tr><td>GET</td><td>/api/v1/dashboard/{id}/maturity</td><td>Индекс зрелости (F-22)</td></tr>
-      <tr><td>POST</td><td>/api/v1/documents/ingest</td><td>Загрузка ВНД / стратегий</td></tr>
-      <tr><td>GET</td><td>/api/v1/employees/{id}/context</td><td>Контекст сотрудника (KPI, проекты)</td></tr>
-      <tr><td>GET</td><td>/api/v1/goals/{id}/history</td><td>История изменений цели (F-15)</td></tr>
-      <tr><td>GET</td><td>/api/v1/notifications</td><td>Alert Manager (уведомления)</td></tr>
-      <tr><td>GET</td><td>/api/v1/data/stats</td><td>Статистика по 13 таблицам (§4.2)</td></tr>
-    </tbody>
-  </table>
-</section>
-
-<!-- ═══════════════════════ СЛАЙД 9: СООТВЕТСТВИЕ ТЗ (A) ═══════════════════════ -->
-<section>
-  <h2>📋 Соответствие ТЗ: Компонент A</h2>
-  <h3>AI-оценка качества целей (§3.1)</h3>
-  <table>
-    <thead>
-      <tr><th>Требование ТЗ</th><th>Реализация</th><th>Статус</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>SMART-оценка по 5 критериям (S/M/A/R/T)</td><td>40+ глаголов, 60+ объектов, regex-паттерны (313 строк)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>Итоговый индекс (Float 0.0–1.0)</td><td>overall_score — среднее 5 SMART-критериев</td><td><span class="check">✅</span></td></tr>
-      <tr><td>Рекомендации (Text список)</td><td>Контекстные рекомендации по слабым критериям</td><td><span class="check">✅</span></td></tr>
-      <tr><td>Переформулировка AI</td><td>LLM-переписывание + rule-based fallback</td><td><span class="check">✅</span></td></tr>
-      <tr><td>Методология SMART + альтернативные</td><td>SMART + OKR (Objectives & Key Results)</td><td><span class="check">✅</span></td></tr>
-    </tbody>
-  </table>
-  <div class="highlight-box" style="font-size:0.75em; margin-top:12px;">
-    🎯 <b>Диагностика:</b> 99% accuracy на 100 целях (50 плохих + 50 хороших), gap = 0.454
-  </div>
-</section>
-
-<!-- ═══════════════════════ СЛАЙД 10: СООТВЕТСТВИЕ ТЗ (B) ═══════════════════════ -->
-<section>
-  <h2>📋 Соответствие ТЗ: Компонент B</h2>
-  <h3>AI-генерация целей (§3.2) — все 14 функций</h3>
-  <table style="font-size:0.6em;">
-    <thead>
-      <tr><th>ID</th><th>Функция</th><th>Статус</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>F-09</td><td>Генерация по должности, подразделению и ВНД</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-10</td><td>Привязка к ВНД / стратегическому документу (источник + цитата)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-11</td><td>Настройка фокус-направления (приоритеты квартала)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-12</td><td>Генерация в SMART-формате, авто-переформулировка при &lt; 0.7</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-13</td><td>Выбор целей из предложенного набора (UI-интерфейс)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-14</td><td>Каскадирование от руководителя к подчинённым</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-15</td><td>Версионирование: история изменений целей (events + reviews)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-16</td><td>Проверка кол-ва целей (&lt; 3 / &gt; 5 — предупреждение)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-17</td><td>Стратегическая связка: strategic / functional / operational</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-18</td><td>Контроль веса целей (≠ 100% → предупреждение)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-19</td><td>Тип: activity-based / output-based / impact-based</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-20</td><td>Проверка достижимости по историческим данным (Jaccard)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-21</td><td>Проверка дублирования целей (batch + генерация)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>F-22</td><td>Индекс зрелости подразделения (maturity_index + maturity_level)</td><td><span class="check">✅</span></td></tr>
-    </tbody>
-  </table>
-</section>
-
-<!-- ═══════════════════════ СЛАЙД 11: MVP ═══════════════════════ -->
-<section>
-  <h2>📋 MVP — Все обязательные + 3 опциональные (§8)</h2>
-  <table>
-    <thead>
-      <tr><th>MVP-функция</th><th>Обязательно</th><th>Статус</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>SMART-оценка одной цели через API</td><td>✅ Да</td><td><span class="check">✅ Готово</span></td></tr>
-      <tr><td>Переформулировка слабой цели</td><td>✅ Да</td><td><span class="check">✅ Готово</span></td></tr>
-      <tr><td>Генерация 3–5 целей по должности</td><td>✅ Да</td><td><span class="check">✅ Готово</span></td></tr>
-      <tr><td>Привязка к источнику ВНД</td><td>✅ Да</td><td><span class="check">✅ Готово</span></td></tr>
-      <tr><td>Пакетная оценка за квартал</td><td>✅ Да</td><td><span class="check">✅ Готово</span></td></tr>
-      <tr><td>Дашборд качества по подразделениям</td><td>✅ Да</td><td><span class="check">✅ Готово</span></td></tr>
-      <tr><td>Каскадирование от руководителя</td><td>⭕ Опционально</td><td><span class="check">✅ Бонус</span></td></tr>
-      <tr><td>Alert Manager (6 типов уведомлений)</td><td>⭕ Опционально</td><td><span class="check">✅ Бонус</span></td></tr>
-      <tr><td>История изменений целей (F-15)</td><td>⭕ Опционально</td><td><span class="check">✅ Бонус</span></td></tr>
-    </tbody>
-  </table>
-  <div class="highlight-box" style="font-size:0.8em; margin-top:15px;">
-    ✅ <b>100% обязательных</b> MVP-функций + <b>3 опциональные</b> (каскадирование, Alert Manager, история)
-  </div>
-</section>
-
-<!-- ═══════════════════════ СЛАЙД 12: FRONTEND ═══════════════════════ -->
-<section>
-  <h2>🖥️ Frontend: 5 страниц SPA</h2>
-  <div class="two-col" style="font-size:0.75em;">
-    <div>
-      <table>
-        <thead><tr><th>Страница</th><th>Функции</th></tr></thead>
-        <tbody>
-          <tr><td><b>📊 Dashboard</b></td><td>Grouped bar chart, ranking table, alert count (277 строк)</td></tr>
-          <tr><td><b>📝 Evaluate</b></td><td>Оценка + batch + SMART breakdown (205 строк)</td></tr>
-          <tr><td><b>🎯 Generate</b></td><td>Генерация целей с фокусом (105 строк)</td></tr>
-          <tr><td><b>🔗 Cascade</b></td><td>Каскадирование от руководителя (137 строк)</td></tr>
-          <tr><td><b>📈 Maturity</b></td><td>Индекс зрелости, pie chart (163 строки)</td></tr>
-        </tbody>
-      </table>
-      <p style="font-size:0.85em; margin-top:10px;">
-        <b>Стек:</b> React 18 + TypeScript 5 + Vite + Recharts<br>
-        <b>Типы:</b> 27 TypeScript-интерфейсов (types.ts, 261 строка)<br>
-        <b>API-клиент:</b> 16 вызовов (api.ts, 65 строк)
-      </p>
-    </div>
-    <div>
-      <div class="arch-box" style="width:95%; border-color:#3b82f6; font-size:0.85em;">
-        <h3 style="margin-top:0; font-size:1.1em;">Dashboard включает:</h3>
-        <ul style="text-align:left; font-size:0.9em;">
-          <li>📊 Grouped bar chart — SMART по подразделениям</li>
-          <li>🥧 Maturity pie chart — распределение уровней зрелости</li>
-          <li>🏆 Ranking table — рейтинг подразделений</li>
-          <li>🔔 Alert badges — critical / warning</li>
-        </ul>
-      </div>
-      <div class="arch-box" style="width:95%; border-color:#22c55e; font-size:0.85em; margin-top:8px;">
-        <h3 style="margin-top:0; font-size:1.1em;">Alert Manager (6 типов):</h3>
-        <ul style="text-align:left; font-size:0.9em;">
-          <li>🔴 Нет целей на квартал</li>
-          <li>🔴 Низкий SMART-индекс (&lt; 60%)</li>
-          <li>🟡 Слабая стратегическая связка</li>
-          <li>🔴 Менее 3 целей / вес ≠ 100%</li>
-          <li>🟡 Дублирование целей</li>
-          <li>🔴 Низкая зрелость подразделения</li>
-        </ul>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════ СЛАЙД 13: RAG PIPELINE ═══════════════════════ -->
-<section>
-  <h2>🔍 RAG Pipeline: гибридный поиск по ВНД</h2>
-  <div style="text-align:center; margin-bottom:15px;">
-    <span class="flow-step">Документ (ВНД)</span>
-    <span class="flow-arrow">→</span>
-    <span class="flow-step">Sentence chunking<br>(300 / 50)</span>
-    <span class="flow-arrow">→</span>
+<!-- СЛАЙД 8: RAG PIPELINE -->
+<section class="slide">
+  <h2>&#128269; RAG Pipeline: гибридный поиск по ВНД</h2>
+  <div style="text-align:center; margin-bottom:12px;">
+    <span class="flow-step">160 документов (ВНД)</span>
+    <span class="flow-arrow">&rarr;</span>
+    <span class="flow-step">Sentence chunking<br>(300 / 50 overlap)</span>
+    <span class="flow-arrow">&rarr;</span>
     <span class="flow-step">N-gram hashing<br>(512d vectors)</span>
-    <span class="flow-arrow">→</span>
+    <span class="flow-arrow">&rarr;</span>
     <span class="flow-step">BM25 index</span>
-    <span class="flow-arrow">→</span>
+    <span class="flow-arrow">&rarr;</span>
     <span class="flow-step">Hybrid search</span>
   </div>
-  <div class="highlight-box" style="font-size:0.8em;">
-    <b>Формула гибридного скоринга:</b><br><br>
-    <code style="font-size:1.2em;">
-      score = cosine × <b>0.40</b> + BM25 × <b>0.35</b> + keyword_boost × <b>0.15</b> + doc_type_bonus × <b>0.10</b>
-    </code>
+  <div class="highlight-box" style="font-size:0.82em; text-align:center;">
+    <b>Формула:</b> <code>score = cosine &times; 0.40 + BM25 &times; 0.35 + keyword_boost &times; 0.15 + doc_type_bonus &times; 0.10</code>
   </div>
-  <div class="two-col" style="font-size:0.7em; margin-top:10px;">
+  <div class="grid2" style="margin-top:10px;">
     <div>
       <table>
         <thead><tr><th>Компонент</th><th>Вес</th><th>Описание</th></tr></thead>
         <tbody>
           <tr><td>Cosine similarity</td><td>0.40</td><td>N-gram feature hashing (512d)</td></tr>
-          <tr><td>BM25 score</td><td>0.35</td><td>Term frequency × IDF (нормализовано)</td></tr>
-          <tr><td>Keyword boost</td><td>0.15</td><td>Точное совпадение ключевых слов</td></tr>
-          <tr><td>Doc type bonus</td><td>0.10</td><td>Приоритет: strategy > vnd > kpi</td></tr>
+          <tr><td>BM25 score</td><td>0.35</td><td>TF &times; IDF (нормализовано)</td></tr>
+          <tr><td>Keyword boost</td><td>0.15</td><td>Совпадение keywords документа</td></tr>
+          <tr><td>Doc type bonus</td><td>0.10</td><td>strategy &gt; vnd &gt; kpi &gt; policy</td></tr>
         </tbody>
       </table>
     </div>
     <div>
-      <div class="arch-box" style="width:90%; font-size:0.9em;">
-        <b>Преимущества нашего RAG:</b>
-        <ul style="font-size:0.85em; text-align:left;">
-          <li>✅ Zero-dependency (без BERT/HuggingFace)</li>
-          <li>✅ ~1000× быстрее BERT для русского</li>
-          <li>✅ Offline-ready (нет внешних API)</li>
-          <li>✅ Sentence-aware: не режет предложения</li>
-          <li>✅ Dual-mode: Memory / Qdrant</li>
-        </ul>
-      </div>
+      <h3>Преимущества RAG</h3>
+      <ul style="font-size:0.75em;">
+        <li>&#10004; Zero-dependency (без BERT/HF)</li>
+        <li>&#10004; ~1000x быстрее BERT для русского</li>
+        <li>&#10004; Offline-ready (нет внешних API)</li>
+        <li>&#10004; Sentence-aware: не режет предложения</li>
+        <li>&#10004; Dual-mode: Memory / Qdrant</li>
+        <li>&#10004; Поддержка sentence-transformers (опц.)</li>
+      </ul>
     </div>
   </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 14: ДАННЫЕ §4.2 ═══════════════════════ -->
-<section>
-  <h2>🗃️ Данные §4.2: 13 таблиц</h2>
-  <div class="two-col" style="font-size:0.7em;">
+<!-- СЛАЙД 9: ОБУЧЕНИЕ RAG И LLM -->
+<section class="slide">
+  <h2>&#127891; Обучение RAG и настройка LLM</h2>
+  <div class="grid2">
+    <div>
+      <h3>RAG &mdash; индексация документов</h3>
+      <ul style="font-size:0.72em;">
+        <li><b>Шаг 1:</b> Загрузка ВНД через <code>POST /api/v1/documents/ingest</code></li>
+        <li><b>Шаг 2:</b> Sentence-aware chunking (300 chars, overlap 50)</li>
+        <li><b>Шаг 3:</b> N-gram hash &rarr; 512d вектор (SHA-256)</li>
+        <li><b>Шаг 4:</b> BM25 индекс (token freq + IDF)</li>
+        <li><b>Данные:</b> 160 документов из mock_smart_1.sql</li>
+        <li><b>Production:</b> Qdrant + sentence-transformers</li>
+      </ul>
+      <div class="highlight-box" style="font-size:0.72em;">
+        Метрики: Recall@5, Precision@5, latency p95
+      </div>
+    </div>
+    <div>
+      <h3>LLM &mdash; prompt engineering + fallback</h3>
+      <ul style="font-size:0.72em;">
+        <li><b>Model:</b> GPT-4o-mini (OpenAI)</li>
+        <li><b>4 system prompts:</b> Generator, Rewriter, Evaluator, OKR Mapper</li>
+        <li><b>Graceful degradation:</b> без ключа &rarr; rule-based</li>
+        <li><b>Промпт-контекст:</b> роль + dept + KPI + RAG-чанки</li>
+        <li><b>Пост-валидация:</b> JSON schema + auto-rewrite &lt; 0.7</li>
+      </ul>
+      <h3 style="margin-top:8px;">Продвинутый режим (опц.)</h3>
+      <ul style="font-size:0.72em;">
+        <li>LoRA/SFT на парах &laquo;слабая &rarr; сильная цель&raquo;</li>
+        <li>Обучение на goal_reviews (4 305 рецензий)</li>
+        <li>Корреляция с экспертной разметкой</li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
+</section>
+
+<!-- СЛАЙД 10: СООТВЕТСТВИЕ ТЗ (A) -->
+<section class="slide">
+  <h2>&#128203; Соответствие ТЗ: Компонент A &mdash; Оценка целей (&sect;3.1)</h2>
+  <table>
+    <thead><tr><th>Требование</th><th>Реализация</th><th>&#10004;</th></tr></thead>
+    <tbody>
+      <tr><td>SMART-оценка по 5 критериям</td><td>40+ глаголов, 60+ объектов, regex-паттерны (313 строк rules.py)</td><td class="check">&#10004;</td></tr>
+      <tr><td>Итоговый индекс (Float 0.0&ndash;1.0)</td><td>overall_score &mdash; среднее S+M+A+R+T</td><td class="check">&#10004;</td></tr>
+      <tr><td>Рекомендации (Text список)</td><td>Контекстные рекомендации по каждому слабому критерию</td><td class="check">&#10004;</td></tr>
+      <tr><td>Переформулировка AI</td><td>LLM-переписывание + rule-based fallback</td><td class="check">&#10004;</td></tr>
+      <tr><td>SMART + альтернативные методологии</td><td>SMART + OKR (Objectives &amp; Key Results) комбинированная</td><td class="check">&#10004;</td></tr>
+    </tbody>
+  </table>
+  <h3 style="margin-top:12px;">Компонент B &mdash; Генерация целей (&sect;3.2): все 14 функций</h3>
+  <table style="font-size:0.62em;">
+    <thead><tr><th>ID</th><th>Функция</th><th>&#10004;</th><th>ID</th><th>Функция</th><th>&#10004;</th></tr></thead>
+    <tbody>
+      <tr><td>F-09</td><td>Генерация по должности + ВНД</td><td class="check">&#10004;</td><td>F-16</td><td>Проверка кол-ва целей</td><td class="check">&#10004;</td></tr>
+      <tr><td>F-10</td><td>Привязка к источнику (ВНД + цитата)</td><td class="check">&#10004;</td><td>F-17</td><td>Стратегическая связка</td><td class="check">&#10004;</td></tr>
+      <tr><td>F-11</td><td>Фокус-направление квартала</td><td class="check">&#10004;</td><td>F-18</td><td>Контроль веса целей</td><td class="check">&#10004;</td></tr>
+      <tr><td>F-12</td><td>SMART-формат + авто-rewrite</td><td class="check">&#10004;</td><td>F-19</td><td>Тип цели (activity/output/impact)</td><td class="check">&#10004;</td></tr>
+      <tr><td>F-13</td><td>UI выбор целей</td><td class="check">&#10004;</td><td>F-20</td><td>Достижимость (исторические данные)</td><td class="check">&#10004;</td></tr>
+      <tr><td>F-14</td><td>Каскадирование от руководителя</td><td class="check">&#10004;</td><td>F-21</td><td>Проверка дублирования</td><td class="check">&#10004;</td></tr>
+      <tr><td>F-15</td><td>Версионирование (events + reviews)</td><td class="check">&#10004;</td><td>F-22</td><td>Индекс зрелости подразделения</td><td class="check">&#10004;</td></tr>
+    </tbody>
+  </table>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
+</section>
+
+<!-- СЛАЙД 11: MVP -->
+<section class="slide">
+  <h2>&#128203; MVP (&sect;8) &mdash; Все обязательные + 3 опциональные</h2>
+  <table>
+    <thead><tr><th>MVP-функция</th><th>Обязательно</th><th>Статус</th></tr></thead>
+    <tbody>
+      <tr><td>SMART-оценка одной цели через API</td><td>&#10004; Да</td><td class="check">&#10004; Готово</td></tr>
+      <tr><td>Переформулировка слабой цели</td><td>&#10004; Да</td><td class="check">&#10004; Готово</td></tr>
+      <tr><td>Генерация 3&ndash;5 целей по должности</td><td>&#10004; Да</td><td class="check">&#10004; Готово</td></tr>
+      <tr><td>Привязка к источнику ВНД</td><td>&#10004; Да</td><td class="check">&#10004; Готово</td></tr>
+      <tr><td>Пакетная оценка за квартал</td><td>&#10004; Да</td><td class="check">&#10004; Готово</td></tr>
+      <tr><td>Дашборд качества по подразделениям</td><td>&#10004; Да</td><td class="check">&#10004; Готово</td></tr>
+      <tr><td>Каскадирование от руководителя</td><td>&#9898; Опционально</td><td class="check">&#10004; Бонус</td></tr>
+      <tr><td>Alert Manager (6 типов уведомлений)</td><td>&#9898; Опционально</td><td class="check">&#10004; Бонус</td></tr>
+      <tr><td>История изменений целей (F-15)</td><td>&#9898; Опционально</td><td class="check">&#10004; Бонус</td></tr>
+    </tbody>
+  </table>
+  <div class="highlight-box" style="margin-top:12px; text-align:center;">
+    &#10004; <b>100% обязательных</b> MVP-функций + <b>3 опциональные</b> (каскадирование, Alert Manager, версионирование)
+  </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
+</section>
+
+<!-- СЛАЙД 12: ДАННЫЕ -->
+<section class="slide">
+  <h2>&#128451; Данные хакатона &mdash; mock_smart_1.sql (&sect;4.2)</h2>
+  <div class="grid2">
     <div>
       <table>
-        <thead><tr><th>Таблица</th><th>Demo</th><th>Synthetic</th></tr></thead>
+        <thead><tr><th>Таблица</th><th>Demo</th><th>Dump (&sect;4.2)</th></tr></thead>
         <tbody>
           <tr><td>departments</td><td>8</td><td>8</td></tr>
           <tr><td>positions</td><td>8</td><td>25</td></tr>
           <tr><td>employees</td><td>6</td><td>450</td></tr>
           <tr><td>documents</td><td>10</td><td>160</td></tr>
           <tr><td>goals</td><td>18</td><td>9 000</td></tr>
-          <tr><td>projects</td><td>—</td><td>34</td></tr>
-          <tr><td>systems</td><td>—</td><td>10</td></tr>
-          <tr><td>project_systems</td><td>—</td><td>65</td></tr>
-          <tr><td>employee_projects</td><td>—</td><td>886</td></tr>
-          <tr><td>goal_events</td><td>—</td><td>30 789</td></tr>
-          <tr><td>goal_reviews</td><td>—</td><td>4 305</td></tr>
-          <tr><td>kpi_catalog</td><td>—</td><td>13</td></tr>
-          <tr><td>kpi_timeseries</td><td>—</td><td>2 112</td></tr>
-          <tr><td colspan="2"><b>ИТОГО</b></td><td><b>47 857</b></td></tr>
+          <tr><td>projects</td><td>&mdash;</td><td>34</td></tr>
+          <tr><td>systems</td><td>&mdash;</td><td>10</td></tr>
+          <tr><td>project_systems</td><td>&mdash;</td><td>65</td></tr>
+          <tr><td>employee_projects</td><td>&mdash;</td><td>886</td></tr>
+          <tr><td>goal_events</td><td>&mdash;</td><td>30 789</td></tr>
+          <tr><td>goal_reviews</td><td>&mdash;</td><td>4 305</td></tr>
+          <tr><td>kpi_catalog</td><td>&mdash;</td><td>13</td></tr>
+          <tr><td>kpi_timeseries</td><td>&mdash;</td><td>2 112</td></tr>
+          <tr style="background:#dcfce7;"><td colspan="2"><b>ИТОГО</b></td><td><b>47 857</b></td></tr>
         </tbody>
       </table>
     </div>
     <div>
-      <div class="arch-box" style="width:95%; font-size:0.85em;">
-        <b>Синтетический генератор:</b><br>
-        <code>generate_synthetic_db.py</code> (666 строк)<br><br>
-        <ul style="text-align:left; font-size:0.85em;">
-          <li>📊 47 857 реалистичных записей</li>
-          <li>🏢 450 сотрудников × 20 кварталов</li>
-          <li>📝 9 000 целей с иерархиями</li>
-          <li>📈 KPI time-series за 12+ периодов</li>
-          <li>🔗 Связи: emp↔project, goal↔events</li>
-        </ul>
-      </div>
-      <div class="highlight-box" style="font-size:0.8em; margin-top:10px;">
-        <b>Dual-mode:</b><br>
-        Demo (50 записей) — для демо<br>
-        Synthetic (47K) — для нагрузочного тестирования
-      </div>
+      <h3>Формат и загрузка</h3>
+      <ul style="font-size:0.72em;">
+        <li><b>Формат:</b> PGDMP (PostgreSQL custom, 2.7 MB)</li>
+        <li><b>Загрузка:</b> <code>pg_restore --no-owner -d hr_goal_ai</code></li>
+        <li><b>Docker:</b> автоматически при <code>docker compose up</code></li>
+        <li><b>Проверка:</b> <code>GET /api/v1/data/stats</code></li>
+        <li><b>Автодетекция:</b> PostgresStore определяет dump vs demo</li>
+      </ul>
+      <h3 style="margin-top:10px;">8 подразделений (реальные ИТ):</h3>
+      <ul style="font-size:0.68em;">
+        <li>Управление данными и аналитики</li>
+        <li>Учётные системы (1С, SAP)</li>
+        <li>Поддержка и производство ПО</li>
+        <li>Корпоративный менеджмент</li>
+        <li>Цифровая трансформация</li>
+        <li>Инфраструктура и DevOps</li>
+        <li>Информационная безопасность</li>
+        <li>Сервис-деск и эксплуатация</li>
+      </ul>
     </div>
   </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 15: РЕЗУЛЬТАТЫ ТЕСТОВ ═══════════════════════ -->
-<section>
-  <h2>📊 Результаты: 7 тестовых сьютов</h2>
-  <table style="font-size:0.7em;">
-    <thead>
-      <tr><th>Тест-сьют</th><th>Тестов</th><th>Результат</th><th>Описание</th></tr>
-    </thead>
+<!-- СЛАЙД 13: РЕЗУЛЬТАТЫ ТЕСТОВ -->
+<section class="slide">
+  <h2>&#128202; Результаты тестирования: 251 тест</h2>
+  <table style="font-size:0.72em;">
+    <thead><tr><th>Тест-сьют</th><th>Тестов</th><th>Результат</th><th>Описание</th></tr></thead>
     <tbody>
-      <tr><td><b>Contract Tests</b></td><td>15</td><td><span class="check">✅ 15/15</span></td><td>Схемы ответов, типы, диапазоны</td></tr>
-      <tr><td><b>Comprehensive QA</b></td><td>61</td><td><span class="check">✅ 61/61</span></td><td>API + Performance + Edge Cases + 47K данных</td></tr>
-      <tr><td><b>Frontend Functional</b></td><td>34</td><td><span class="check">✅ 34/34</span></td><td>API-контракты фронтенда, build-артефакты</td></tr>
-      <tr><td><b>Smoke Endpoints</b></td><td>17</td><td><span class="check">✅ 17/17</span></td><td>Все эндпоинты, status 200 + ключевые поля</td></tr>
-      <tr><td><b>Quick Tests</b></td><td>16</td><td><span class="check">✅ 16/16</span></td><td>Быстрая проверка всех эндпоинтов</td></tr>
-      <tr><td><b>Demo Tests</b></td><td>8</td><td><span class="check">✅ 8/8</span></td><td>Сценарии демо-режима</td></tr>
-      <tr><td><b>Diagnostic (accuracy)</b></td><td>100</td><td><span class="check">✅ 99/100</span></td><td>50 плохих + 50 хороших целей</td></tr>
+      <tr><td><b>Contract Tests</b></td><td>15</td><td class="check">&#10004; 15/15</td><td>Схемы ответов, типы, диапазоны</td></tr>
+      <tr><td><b>Comprehensive QA</b></td><td>61</td><td class="check">&#10004; 61/61</td><td>API + Performance + Edge Cases + 47K данных</td></tr>
+      <tr><td><b>Frontend Functional</b></td><td>34</td><td class="check">&#10004; 34/34</td><td>API-контракты фронтенда, build</td></tr>
+      <tr><td><b>Smoke Endpoints</b></td><td>17</td><td class="check">&#10004; 17/17</td><td>Все эндпоинты, status 200</td></tr>
+      <tr><td><b>Quick Tests</b></td><td>16</td><td class="check">&#10004; 16/16</td><td>Быстрая проверка</td></tr>
+      <tr><td><b>Demo Tests</b></td><td>8</td><td class="check">&#10004; 8/8</td><td>Сценарии демо</td></tr>
+      <tr><td><b>Diagnostic (accuracy)</b></td><td>100</td><td class="check">&#10004; 99/100</td><td>50 плохих + 50 хороших целей</td></tr>
       <tr style="background:#dcfce7;"><td><b>ИТОГО</b></td><td><b>251</b></td><td><b>250/251</b></td><td><b>99.6% pass rate</b></td></tr>
     </tbody>
   </table>
-</section>
-
-<!-- ═══════════════════════ СЛАЙД 16: ACCURACY DETAILS ═══════════════════════ -->
-<section>
-  <h2>📊 Диагностика точности: 100 целей</h2>
-  <div class="two-col">
+  <div class="grid2" style="margin-top:10px;">
     <div>
-      <table>
-        <thead>
-          <tr><th>Метрика</th><th>Значение</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>Общая точность</td><td><b style="color:#16a34a;">99.0%</b> (99/100)</td></tr>
-          <tr><td>Плохие цели (< 0.5)</td><td>50/50 ✅ (100%)</td></tr>
-          <tr><td>Хорошие цели (≥ 0.5)</td><td>49/50 ✅ (98%)</td></tr>
-          <tr><td>Средний score плохих</td><td>0.409</td></tr>
-          <tr><td>Средний score хороших</td><td>0.863</td></tr>
-          <tr><td>Разделение (gap)</td><td><b>0.454</b></td></tr>
-          <tr><td>False Positives</td><td>1 (пограничный, 0.60)</td></tr>
-          <tr><td>False Negatives</td><td>0</td></tr>
-        </tbody>
+      <h3>Диагностика точности &mdash; 100 целей</h3>
+      <table style="font-size:0.68em;">
+        <tr><td>Общая точность</td><td><b style="color:#16a34a;">99%</b></td></tr>
+        <tr><td>Плохие цели верно определены</td><td>50/50 (100%)</td></tr>
+        <tr><td>Хорошие цели верно определены</td><td>49/50 (98%)</td></tr>
+        <tr><td>Средний score плохих</td><td>0.409</td></tr>
+        <tr><td>Средний score хороших</td><td>0.863</td></tr>
+        <tr><td>Gap (разделение)</td><td><b>0.454</b></td></tr>
       </table>
     </div>
     <div>
-      <h3 style="margin-top:0;">Примеры оценок:</h3>
-      <div style="text-align:left; font-size:0.7em;">
-        <div class="problem-card" style="padding:10px;">
-          ❌ «Улучшить работу отдела»<br>
-          <b>Score: 0.42</b> — размыто, нет метрик, нет срока
-        </div>
-        <div class="solution-card" style="padding:10px;">
-          ✅ «До 30.06 сократить срок согласования HR-заявок с 5 до 3 дней»<br>
-          <b>Score: 0.87</b> — конкретно, измеримо, есть дедлайн
-        </div>
-      </div>
-      <div class="highlight-box" style="font-size:0.7em; margin-top:10px;">
-        <b>Performance:</b> health &lt; 100ms, evaluate &lt; 2s, generate &lt; 5s
-      </div>
+      <h3>Performance</h3>
+      <table style="font-size:0.68em;">
+        <tr><td>/health</td><td>&lt; 100ms</td></tr>
+        <tr><td>/evaluate</td><td>&lt; 2s</td></tr>
+        <tr><td>/generate (LLM)</td><td>&lt; 5s</td></tr>
+        <tr><td>/generate (rules)</td><td>&lt; 1s</td></tr>
+        <tr><td>/dashboard</td><td>&lt; 500ms</td></tr>
+      </table>
     </div>
   </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 17: ПРИМЕРЫ API ═══════════════════════ -->
-<section>
-  <h2>🔍 Примеры работы системы</h2>
-  <div class="two-col" style="font-size:0.7em;">
+<!-- СЛАЙД 14: МЕТРИКИ КАЧЕСТВА -->
+<section class="slide">
+  <h2>&#128202; Метрики качества AI-модуля</h2>
+  <div class="grid2">
+    <div>
+      <h3>A. Оценка целей (Quality Evaluator)</h3>
+      <table style="font-size:0.68em;">
+        <tr><td>SMART accuracy</td><td><b>99%</b> (99/100)</td></tr>
+        <tr><td>False Positives</td><td>1 (пограничный, 0.60)</td></tr>
+        <tr><td>False Negatives</td><td>0</td></tr>
+        <tr><td>Gap плохих / хороших</td><td><b>0.454</b></td></tr>
+        <tr><td>Alignment detection</td><td>strategic / functional / operational</td></tr>
+        <tr><td>Goal type detection</td><td>activity / output / impact-based</td></tr>
+      </table>
+      <h3 style="margin-top:10px;">B. Генерация целей (Goal Generator)</h3>
+      <table style="font-size:0.68em;">
+        <tr><td>SMART threshold</td><td>&ge; 0.7 (auto-rewrite если ниже)</td></tr>
+        <tr><td>Привязка к ВНД</td><td>100% &mdash; doc_id + fragment</td></tr>
+        <tr><td>Дубликаты</td><td>Jaccard similarity &ge; 0.15 &rarr; alert</td></tr>
+      </table>
+    </div>
+    <div>
+      <h3>C. RAG Pipeline</h3>
+      <table style="font-size:0.68em;">
+        <tr><td>Hybrid formula</td><td>cos&times;0.40 + BM25&times;0.35 + kw&times;0.15 + dt&times;0.10</td></tr>
+        <tr><td>Vector dim</td><td>512 (n-gram hash)</td></tr>
+        <tr><td>Chunking</td><td>300 chars, overlap 50, sentence-aware</td></tr>
+        <tr><td>Documents indexed</td><td>160 (из mock_smart_1.sql)</td></tr>
+      </table>
+      <h3 style="margin-top:10px;">D. Дашборд / Аналитика (F-22)</h3>
+      <table style="font-size:0.68em;">
+        <tr><td>Индекс зрелости</td><td>0.0 &ndash; 1.0 по подразделению</td></tr>
+        <tr><td>Уровни</td><td>начальный / развивающийся / зрелый / продвинутый</td></tr>
+        <tr><td>Alert Manager</td><td>6 типов (critical + warning)</td></tr>
+        <tr><td>Динамика</td><td>По кварталам (Q1&ndash;Q4)</td></tr>
+      </table>
+      <h3 style="margin-top:10px;">E. Критерии хакатона (&sect;6)</h3>
+      <table style="font-size:0.68em;">
+        <tr><td>Качество оценки (25%)</td><td class="check">&#10004;</td></tr>
+        <tr><td>Качество генерации (25%)</td><td class="check">&#10004;</td></tr>
+        <tr><td>UX интерфейса (15%)</td><td class="check">&#10004;</td></tr>
+        <tr><td>RAG-пайплайн (15%)</td><td class="check">&#10004;</td></tr>
+        <tr><td>Архитектура и API (10%)</td><td class="check">&#10004;</td></tr>
+        <tr><td>Аналитика/дашборд (10%)</td><td class="check">&#10004;</td></tr>
+      </table>
+    </div>
+  </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
+</section>
+
+<!-- СЛАЙД 15: ПРИМЕРЫ API -->
+<section class="slide">
+  <h2>&#128269; Примеры работы системы</h2>
+  <div class="grid2" style="font-size:0.72em;">
     <div style="text-align:left;">
-      <b>Вход — оценка цели:</b>
-<pre><code>{
-  "employee_id": "emp_1",
+      <b>Вход &mdash; оценка слабой цели:</b>
+      <pre><code>POST /api/v1/goals/evaluate
+{ "employee_id": "emp_1",
   "goal_text": "Улучшить работу отдела",
-  "quarter": "Q2",
-  "year": 2026
-}</code></pre>
+  "quarter": "Q2", "year": 2026 }</code></pre>
       <b>Выход:</b>
-<pre><code>{
-  "overall_score": 0.42,
+      <pre><code>{ "overall_score": 0.42,
   "alignment_level": "functional",
   "goal_type": "activity-based",
   "recommendations": [
@@ -602,312 +562,135 @@
     "Укажите конкретный срок..."
   ],
   "rewrite": "До 30.06.2026 повысить
-    удовлетворённость внутренних
-    клиентов HR-сервиса до 85%...",
-  "achievability": {
-    "is_achievable": true,
-    "confidence": 0.7
-  }
+    удовлетворённость клиентов до 85%..."
 }</code></pre>
     </div>
     <div style="text-align:left;">
-      <b>Генерация для рекрутера:</b>
-<pre><code>{
-  "employee_id": "emp_4",
+      <b>Генерация целей для рекрутера:</b>
+      <pre><code>POST /api/v1/goals/generate
+{ "employee_id": "emp_4",
   "quarter": "Q2", "year": 2026,
   "count": 3,
-  "focus": "подбор и адаптация"
-}</code></pre>
-      <b>Результат (3 цели):</b>
-<pre><code>[
-  {
-    "title": "До 30.06.2026 сократить
-      средний срок закрытия вакансий
-      с 45 до 30 рабочих дней",
-    "score": 0.88,
-    "alignment_level": "strategic",
-    "goal_type": "impact-based",
-    "source": { "doc_id": "DOC-06",
-      "title": "Политика подбора",
-      "fragment": "Релевантный фрагмент"
-    }
-  },
-  ...
-]</code></pre>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════ СЛАЙД 18: BATCH + MATURITY ═══════════════════════ -->
-<section>
-  <h2>🔍 Пакетная оценка и зрелость</h2>
-  <div class="two-col" style="font-size:0.7em;">
-    <div style="text-align:left;">
-      <b>Пакетная оценка (batch):</b>
-<pre><code>{
-  "average_smart_index": 0.88,
-  "strategic_goal_share": 0.67,
-  "alerts": [
-    "У сотрудника менее 3 целей"
-  ],
-  "weight_check": {
-    "total_weight": 100.0,
-    "is_balanced": true
+  "focus": "подбор и адаптация" }</code></pre>
+      <b>Результат &mdash; 3 SMART-цели:</b>
+      <pre><code>[{
+  "title": "До 30.06.2026 сократить
+    срок закрытия вакансий с 45 до 30
+    рабочих дней",
+  "score": 0.88,
+  "alignment_level": "strategic",
+  "source": {
+    "doc_id": "DOC-06",
+    "title": "Политика подбора",
+    "fragment": "Релевантный фрагмент"
   }
-}
+}, ...]</code></pre>
+    </div>
+  </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
+</section>
 
-// При проблемах:
-{
-  "alerts": [
-    "Менее 3 целей на квартал",
-    "Суммарный вес ≠ 100%",
-    "Дублирующихся целей: 1"
-  ]
-}</code></pre>
+<!-- СЛАЙД 16: ИНСТРУКЦИЯ ПО ЗАПУСКУ -->
+<section class="slide">
+  <h2>&#128229; Инструкция по запуску</h2>
+  <div class="grid2" style="font-size:0.72em;">
+    <div style="text-align:left;">
+      <h3>Вариант 1: Локальный (Demo)</h3>
+      <pre><code># 1. Клонировать
+git clone &lt;repo-url&gt;
+cd kumkol_hr_project
+
+# 2. Виртуальное окружение
+python -m venv .venv
+.venv\Scripts\activate
+
+# 3. Зависимости
+pip install -r requirements.txt
+
+# 4. (Опц.) LLM ключ
+$env:OPENAI_API_KEY = "sk-proj-..."
+
+# 5. Запуск
+cd backend_project
+uvicorn app.main:app --port 8899
+
+# 6. Проверка
+# http://localhost:8899/docs
+# http://localhost:8899/health</code></pre>
     </div>
     <div style="text-align:left;">
-      <b>Индекс зрелости (F-22):</b>
-<pre><code>{
-  "maturity_index": 0.72,
-  "maturity_level": "продвинутый",
-  "total_goals": 5,
-  "goal_type_distribution": {
-    "impact-based": 3,
-    "output-based": 1,
-    "activity-based": 1
-  },
-  "recommendations": [
-    "Слабый критерий «достижимость»
-     — обратите внимание."
-  ]
-}
+      <h3>Вариант 2: Docker (Production + дамп)</h3>
+      <pre><code># 1. Поместите дамп
+cp mock_smart_1.sql backend_project/data/
 
-// Уровни:
-// 0.0-0.3 → начальный
-// 0.3-0.5 → развивающийся
-// 0.5-0.7 → зрелый
-// 0.7-1.0 → продвинутый</code></pre>
+# 2. Запуск 4 сервисов
+cd backend_project
+docker compose up --build -d
+
+# 3. Проверка
+curl http://localhost:8080/health
+# mode: "hackathon-dump"
+
+# 4. Frontend
+# http://localhost:5173
+
+# 5. Qdrant Dashboard
+# http://localhost:6333/dashboard</code></pre>
+      <h3 style="margin-top:8px;">Smoke-тест</h3>
+      <pre><code>cd backend_project
+python qa/smoke_demo.py
+# 12/12 tests passed</code></pre>
     </div>
   </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 19: ДЕМО ДАННЫЕ ═══════════════════════ -->
-<section>
-  <h2>🗃️ Демо-данные (seed)</h2>
-  <div class="two-col">
-    <div>
-      <h3 style="margin-top:0;">Сотрудники (6)</h3>
-      <table style="font-size:0.85em;">
-        <thead>
-          <tr><th>ID</th><th>Имя</th><th>Должность</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>emp_mgr</td><td>Aidos S.</td><td>Manager (G12)</td></tr>
-          <tr><td>emp_1</td><td>Aigerim S.</td><td>HRBP (G10)</td></tr>
-          <tr><td>emp_2</td><td>Dana M.</td><td>L&D Specialist (G9)</td></tr>
-          <tr><td>emp_3</td><td>Marat K.</td><td>C&B Specialist (G9)</td></tr>
-          <tr><td>emp_4</td><td>Saltanat B.</td><td>Recruiter (G8)</td></tr>
-          <tr><td>emp_5</td><td>Nurzhan T.</td><td>HR Analyst (G9)</td></tr>
-        </tbody>
-      </table>
-    </div>
-    <div>
-      <h3 style="margin-top:0;">Подразделения (8)</h3>
-      <table style="font-size:0.85em;">
-        <thead>
-          <tr><th>ID</th><th>Название</th></tr>
-        </thead>
-        <tbody>
-          <tr><td>dep_hr</td><td>HR / Production Block</td></tr>
-          <tr><td>dep_lnd</td><td>Learning & Development</td></tr>
-          <tr><td>dep_ops</td><td>Production Operations</td></tr>
-          <tr><td>dep_comp</td><td>Compensation & Benefits</td></tr>
-          <tr><td>dep_rec</td><td>Recruitment & Staffing</td></tr>
-          <tr><td>dep_fin</td><td>Finance & Budgeting</td></tr>
-          <tr><td>dep_it</td><td>IT & Digital</td></tr>
-          <tr><td>dep_legal</td><td>Legal & Compliance</td></tr>
-        </tbody>
-      </table>
-      <p style="font-size:0.7em; color:#666; margin-top:8px;">+ 10 документов (ВНД, стратегии, KPI, политики)<br>+ 18 целей с заполненными полями</p>
-    </div>
-  </div>
-</section>
-
-<!-- ═══════════════════════ СЛАЙД 20: DUAL-MODE ═══════════════════════ -->
-<section>
-  <h2>🔄 Dual-mode архитектура</h2>
-  <p style="font-size:0.8em; color:#666;">Система работает в двух режимах <b>без изменения кода</b></p>
+<!-- СЛАЙД 17: ПОСТАВКА -->
+<section class="slide">
+  <h2>&#128230; Состав поставки (&sect;10)</h2>
   <table>
-    <thead>
-      <tr><th></th><th>Demo mode (по умолчанию)</th><th>Production mode</th></tr>
-    </thead>
+    <thead><tr><th>Артефакт</th><th>Описание</th><th>&#10004;</th></tr></thead>
     <tbody>
-      <tr><td><b>Storage</b></td><td>In-memory (50 записей)</td><td>PostgreSQL 17 (13 таблиц)</td></tr>
-      <tr><td><b>Vector</b></td><td>N-gram + BM25 (zero-config)</td><td>Qdrant (Docker)</td></tr>
-      <tr><td><b>LLM</b></td><td>Rule-based fallback (offline)</td><td>GPT-4o-mini (OpenAI API)</td></tr>
-      <tr><td><b>Запуск</b></td><td><code>uvicorn app.main:app</code></td><td><code>docker compose up</code></td></tr>
-      <tr><td><b>Конфигурация</b></td><td>Нет переменных окружения</td><td><code>.env</code> файл</td></tr>
+      <tr><td>Исходный код</td><td>Backend (FastAPI, 1 114 строк engine) + Frontend (React, 5 страниц)</td><td class="check">&#10004;</td></tr>
+      <tr><td>README.md (&times;2)</td><td>Документация + техническая (алгоритмы, формулы RAG/LLM)</td><td class="check">&#10004;</td></tr>
+      <tr><td>requirements.txt</td><td>Python-зависимости (+ sentence-transformers, torch, pandas)</td><td class="check">&#10004;</td></tr>
+      <tr><td>.env.example</td><td>Шаблон конфигурации (без секретов)</td><td class="check">&#10004;</td></tr>
+      <tr><td>Dockerfile + docker-compose.yml</td><td>4 сервиса: API + PostgreSQL 17 + Qdrant + Frontend</td><td class="check">&#10004;</td></tr>
+      <tr><td>.gitignore</td><td>Исключение секретов, артефактов, кэшей моделей</td><td class="check">&#10004;</td></tr>
+      <tr><td>Тестовые данные</td><td>100 целей + 47K synthetic + 7 тестовых сьютов</td><td class="check">&#10004;</td></tr>
+      <tr><td>QA-отчёты</td><td>test_report.md, comprehensive_test_report.md</td><td class="check">&#10004;</td></tr>
+      <tr><td>Swagger UI</td><td>Интерактивная API-документация (16 эндпоинтов)</td><td class="check">&#10004;</td></tr>
+      <tr><td>Презентация</td><td>presentation.html (PDF-ready, 18 слайдов)</td><td class="check">&#10004;</td></tr>
     </tbody>
   </table>
-  <div class="highlight-box" style="font-size:0.8em; margin-top:15px;">
-    🔑 Переключение через переменные окружения — <b>ни одна строка кода не меняется</b>.<br>
-    DI-контейнер (<code>container.py</code>) автоматически выбирает нужные адаптеры.
+  <div class="highlight-box" style="margin-top:8px; text-align:center;">
+    Без логинов, паролей и API-ключей в репозитории. Все секреты через <code>.env</code> (шаблон: <code>.env.example</code>).
+  </div>
+  <div class="footer">GoalCraft AI &mdash; Хакатон 2026</div>
+</section>
+
+<!-- СЛАЙД 18: СПАСИБО -->
+<section class="slide slide-dark">
+  <div style="text-align:center; padding-top:20px;">
+    <h1 style="font-size:2.5em;">&#127919; GoalCraft AI</h1>
+    <br>
+    <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:12px;">
+      <div class="metric-card metric-card-dark"><div class="value">99%</div><div class="label">Точность</div></div>
+      <div class="metric-card metric-card-dark"><div class="value">251</div><div class="label">Тестов</div></div>
+      <div class="metric-card metric-card-dark"><div class="value">16</div><div class="label">API эндпоинтов</div></div>
+      <div class="metric-card metric-card-dark"><div class="value">47K+</div><div class="label">Записей в БД</div></div>
+      <div class="metric-card metric-card-dark"><div class="value">9/9</div><div class="label">MVP функций</div></div>
+    </div>
+    <br>
+    <p style="color:#94a3b8; font-size:0.9em;">Спасибо за внимание!</p>
+    <p style="color:#64748b; font-size:0.75em; margin-top:15px;">
+      Swagger UI: <span style="color:#60a5fa;">http://localhost:8899/docs</span><br>
+      Тесты: <span style="color:#60a5fa;">python qa/smoke_demo.py</span> (12/12 passed)<br>
+      <br>
+      <b style="color:#cbd5e1;">Для экспорта в PDF:</b> откройте этот файл в браузере &rarr; Ctrl+P &rarr; Сохранить как PDF (A4 Landscape)
+    </p>
   </div>
 </section>
 
-<!-- ═══════════════════════ СЛАЙД 21: GITHUB + ЗАПУСК ═══════════════════════ -->
-<section>
-  <h2>📥 Репозиторий на GitHub</h2>
-  <div style="text-align:left; font-size:0.75em;">
-
-    <div class="highlight-box" style="font-size:1.1em; text-align:center; margin-bottom:15px;">
-      🔗 <b><a href="https://github.com/TriplelllK/GoalCraft_AI" target="_blank" style="color:#3b82f6;">
-        github.com/TriplelllK/GoalCraft_AI
-      </a></b>
-    </div>
-
-    <h3 style="margin-top:0;">Шаг 1: Скачать проект</h3>
-<pre><code># Вариант A: через Git
-git clone https://github.com/TriplelllK/GoalCraft_AI.git
-cd GoalCraft_AI
-
-# Вариант B: скачать ZIP с GitHub
-# → Code → Download ZIP → распаковать</code></pre>
-
-    <h3>Шаг 2: Установить зависимости</h3>
-<pre><code>python -m venv .venv
-.venv\Scripts\activate          # Windows
-pip install -r requirements.txt</code></pre>
-
-    <h3>Шаг 3: (Опционально) Настроить LLM</h3>
-<pre><code># Windows PowerShell:
-$env:OPENAI_API_KEY = "sk-proj-ваш-ключ"
-# Linux / Mac:
-export OPENAI_API_KEY="sk-proj-ваш-ключ"</code></pre>
-    <div class="highlight-box" style="font-size:0.85em;">
-      💡 <b>Без ключа OpenAI</b> — всё работает (rule-based). <b>С ключом</b> — генерация через GPT-4o-mini.
-    </div>
-
-    <h3>Шаг 4: Запуск</h3>
-<pre><code>cd backend_project
-uvicorn app.main:app --host 0.0.0.0 --port 8899</code></pre>
-    <p>👉 Swagger UI: <b>http://localhost:8899/docs</b></p>
-  </div>
-</section>
-
-<!-- ═══════════════════════ СЛАЙД 22: ТЕСТИРОВАНИЕ ═══════════════════════ -->
-<section>
-  <h2>🧪 Как проверить своими данными</h2>
-  <div style="text-align:left; font-size:0.68em;">
-
-    <h3 style="margin-top:0;">1️⃣ Загрузите свои ВНД / стратегии</h3>
-    <p>Откройте <b>http://localhost:8899/docs</b> → <b>POST /api/v1/documents/ingest</b> → Try it out:</p>
-<pre><code>{ "documents": [{
-    "doc_id": "MY-VND-01", "doc_type": "vnd",
-    "title": "Ваш реальный ВНД или стратегия",
-    "content": "Полный текст документа — скопируйте из Word/PDF...",
-    "owner_department_id": "dep_hr",
-    "department_scope": ["dep_hr", "dep_ops"],
-    "keywords": ["ваши", "ключевые", "слова"]
-}]}</code></pre>
-    <p style="color:#666;">📌 <i>doc_type</i>: <b>vnd</b> (ВНД), <b>strategy</b> (стратегия), <b>kpi</b> (KPI-фреймворк), <b>policy</b> (политика)</p>
-
-    <h3>2️⃣ Оцените реальные цели сотрудников</h3>
-    <p><b>POST /api/v1/goals/evaluate</b> — вставьте реальную формулировку цели из вашей системы:</p>
-<pre><code>{ "employee_id": "emp_1", "goal_text": "Ваша реальная цель сотрудника...",
-  "quarter": "Q2", "year": 2026 }</code></pre>
-
-    <h3>3️⃣ Сгенерируйте цели для должности</h3>
-    <p><b>POST /api/v1/goals/generate</b> — укажите фокус по вашим приоритетам:</p>
-<pre><code>{ "employee_id": "emp_1", "quarter": "Q2", "year": 2026,
-  "count": 3, "focus": "ваш приоритет на квартал" }</code></pre>
-
-    <h3>4️⃣ Запустите автоматические тесты (251 тест)</h3>
-<pre><code>cd backend_project
-python qa/run_api_contract_tests.py    # 15 контрактных тестов
-python qa/run_comprehensive_tests.py   # 61 комплексный (+ 47K синтетических)
-python qa/run_diagnostic_50.py         # 99/100 accuracy (100 целей)
-python qa/smoke_endpoints.py           # 17 smoke (все эндпоинты)
-python qa/run_frontend_tests.py        # 34 frontend теста
-python qa/quick_test.py                # 16 быстрых тестов
-python qa/demo_test.py                 # 8 демо тестов</code></pre>
-  </div>
-</section>
-
-<!-- ═══════════════════════ СЛАЙД 23: ПОСТАВКА ═══════════════════════ -->
-<section>
-  <h2>📦 Состав поставки (§10)</h2>
-  <table>
-    <thead>
-      <tr><th>Артефакт</th><th>Описание</th><th>Статус</th></tr>
-    </thead>
-    <tbody>
-      <tr><td>Исходный код</td><td>Backend (FastAPI, 1 114 строк engine) + Frontend (React, 5 страниц)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>README.md (×2)</td><td>Документация + техническая презентация (алгоритмы)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>requirements.txt</td><td>Python-зависимости</td><td><span class="check">✅</span></td></tr>
-      <tr><td>.env.example</td><td>Шаблон конфигурации</td><td><span class="check">✅</span></td></tr>
-      <tr><td>Dockerfile + docker-compose.yml</td><td>3 сервиса: API + PostgreSQL + Qdrant</td><td><span class="check">✅</span></td></tr>
-      <tr><td>Тестовые данные</td><td>100 целей + 47K synthetic + 7 тестовых сьютов</td><td><span class="check">✅</span></td></tr>
-      <tr><td>QA-отчёты</td><td>test_report.md, comprehensive_test_report.md</td><td><span class="check">✅</span></td></tr>
-      <tr><td>Swagger UI</td><td>Интерактивная API-документация (16 эндпоинтов)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>Презентация</td><td>presentation.html (Reveal.js, 24 слайда)</td><td><span class="check">✅</span></td></tr>
-      <tr><td>CI/CD</td><td>GitHub Actions workflow</td><td><span class="check">✅</span></td></tr>
-    </tbody>
-  </table>
-</section>
-
-<!-- ═══════════════════════ СЛАЙД 24: СПАСИБО ═══════════════════════ -->
-<section data-background="linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)">
-  <h1 style="color:white; font-size:2.5em;">🎯 GoalCraft AI</h1>
-  <br>
-  <div style="display:flex; justify-content:center; flex-wrap:wrap; gap:15px;">
-    <div class="metric-card" style="background:rgba(255,255,255,0.1); box-shadow:none;">
-      <div class="value" style="color:#60a5fa;">99%</div>
-      <div class="label" style="color:#94a3b8;">Точность</div>
-    </div>
-    <div class="metric-card" style="background:rgba(255,255,255,0.1); box-shadow:none;">
-      <div class="value" style="color:#60a5fa;">251</div>
-      <div class="label" style="color:#94a3b8;">Тестов</div>
-    </div>
-    <div class="metric-card" style="background:rgba(255,255,255,0.1); box-shadow:none;">
-      <div class="value" style="color:#60a5fa;">16</div>
-      <div class="label" style="color:#94a3b8;">API эндпоинтов</div>
-    </div>
-    <div class="metric-card" style="background:rgba(255,255,255,0.1); box-shadow:none;">
-      <div class="value" style="color:#60a5fa;">8 275</div>
-      <div class="label" style="color:#94a3b8;">Строк кода</div>
-    </div>
-    <div class="metric-card" style="background:rgba(255,255,255,0.1); box-shadow:none;">
-      <div class="value" style="color:#60a5fa;">9/9</div>
-      <div class="label" style="color:#94a3b8;">MVP функций</div>
-    </div>
-  </div>
-  <br>
-  <p style="color:#94a3b8; font-size:0.9em;">Спасибо за внимание!</p>
-  <p style="color:#64748b; font-size:0.7em;">
-    GitHub: <a href="https://github.com/TriplelllK/GoalCraft_AI" target="_blank" style="color:#60a5fa;">github.com/TriplelllK/GoalCraft_AI</a><br>
-    Swagger UI: <span style="color:#60a5fa;">http://localhost:8899/docs</span><br>
-    Тесты: <span style="color:#60a5fa;">python qa/run_api_contract_tests.py</span>
-  </p>
-</section>
-
-</div>
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
-<script>
-  Reveal.initialize({
-    hash: true,
-    slideNumber: 'c/t',
-    width: 1200,
-    height: 700,
-    margin: 0.04,
-    transition: 'slide',
-    backgroundTransition: 'fade',
-    controls: true,
-    progress: true,
-    center: true,
-  });
-</script>
 </body>
 </html>

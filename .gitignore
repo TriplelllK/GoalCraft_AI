@@ -9,12 +9,29 @@ llm_api_key.txt
 !.env.example
 
 # ── Binary / large files (not for git) ───────────────────────────
-*.pdf
 *.docx
 *.pptx
 *.xlsx
 *.zip
 *.tar.gz
+# NOTE: *.pdf NOT ignored — presentation.pdf is part of the deliverables
+
+# ── Model artefacts & caches ─────────────────────────────────────
+*.pt
+*.bin
+*.safetensors
+*.onnx
+*.faiss
+*.index
+models/
+checkpoints/
+artifacts/
+vector_store/
+chroma/
+qdrant_storage/
+.cache/
+.transformers_cache/
+hub/
 
 # ── Hackathon dump data (§4.2) ───────────────────────────────────
 backend_project/data/mock_smart_1.sql

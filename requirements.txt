@@ -5,11 +5,19 @@
 fastapi>=0.115,<1.0
 uvicorn[standard]>=0.30,<1.0
 pydantic>=2.8,<3.0
+pydantic-settings>=2.6,<3.0
 httpx>=0.27,<1.0
 python-dotenv>=1.0,<2.0
+python-multipart>=0.0.9,<1.0
+jinja2>=3.1,<4.0
 
 # ── LLM (optional — graceful degradation without API key) ────────
 openai>=1.40,<3.0
+
+# ── Embeddings & NLP (optional — for advanced RAG mode) ──────────
+sentence-transformers>=3.0,<4.0    # Multilingual embeddings for RAG
+transformers>=4.40,<5.0            # HuggingFace backbone
+torch>=2.2                         # PyTorch (CPU by default)
 
 # ── Storage Backends (optional — defaults to in-memory) ──────────
 psycopg[binary]>=3.1,<4.0          # PostgreSQL adapter (async-ready, v3)
@@ -17,7 +25,12 @@ psycopg2-binary>=2.9,<3.0          # PostgreSQL adapter (legacy fallback)
 qdrant-client>=1.9,<2.0            # Qdrant vector database client
 numpy>=1.24,<3.0                   # Vector operations for RAG
 
+# ── Data & Analytics ─────────────────────────────────────────────
+pandas>=2.1,<3.0                   # Data analysis for metrics reports
+scikit-learn>=1.4,<2.0             # Similarity & clustering utilities
+
 # ── Testing ──────────────────────────────────────────────────────
 requests>=2.31,<3.0                # HTTP client for test suites
 pytest>=8.0,<10.0                  # CI test runner
+pytest-asyncio>=0.23,<1.0          # Async test support
 httpx>=0.27,<1.0                   # async HTTP client (FastAPI TestClient)

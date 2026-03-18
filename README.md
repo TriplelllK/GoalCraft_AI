@@ -639,7 +639,279 @@ npm run dev
 
 ---
 
-## 📁 Структура проекта
+## �️ Загрузка данных хакатона (mock_smart_1.sql)
+
+### Формат дампа
+
+Файл `backend_project/data/mock_smart_1.sql` — **PostgreSQL custom-format** (PGDMP, ~2.7MB).
+Содержит 13 таблиц с **47 857 записями** (§4.2 ТЗ):
+
+| Таблица | Записей | Описание |
+|---------|---------|----------|
+| departments | 8 | Подразделения (ИТ-направления) |
+| positions | 25 | Должности с грейдами |
+| employees | 450 | Сотрудники + иерархия (manager_id) |
+| documents | 160 | ВНД, стратегии, KPI-фреймворки |
+| goals | 9 000 | Цели сотрудников за все кварталы |
+| goal_events | 30 789 | Журнал изменений целей (F-15) |
+| goal_reviews | 4 305 | Рецензии руководителей |
+| projects | 34 | Проекты |
+| systems | 10 | ИТ-системы |
+| project_systems | 65 | Связь проект↔система |
+| employee_projects | 886 | Связь сотрудник↔проект |
+| kpi_catalog | 13 | Каталог KPI |
+| kpi_timeseries | 2 112 | Временные ряды KPI |
+
+### Загрузка дампа
+
+```bash
+# Вариант 1: Docker Compose (автоматически при первом запуске)
+cp /path/to/mock_smart_1.sql backend_project/data/
+cd backend_project && docker compose up --build -d
+
+# Вариант 2: pg_restore вручную
+createdb -U postgres hr_goal_ai
+pg_restore --no-owner --no-privileges -U postgres -d hr_goal_ai backend_project/data/mock_smart_1.sql
+
+# Вариант 3: Python-скрипт
+python backend_project/scripts/load_dump.py backend_project/data/mock_smart_1.sql
+```
+
+### Проверка загрузки
+
+```bash
+# Через API:
+curl http://localhost:8899/api/v1/data/stats
+# Ожидаемый ответ: { "departments": 8, "employees": 450, "goals": 9000, ... }
+
+# Через health:
+curl http://localhost:8899/health
+# mode: "hackathon-dump" — дамп успешно загружен
+```
+
+### Автодетекция схемы
+
+PostgresStore автоматически определяет формат данных:
+- Если найдена колонка `goals.goal_id` → используется **dump-схема** (§4.2, 13 таблиц)
+- Иначе → создаётся **demo-схема** и загружается seed-data
+
+---
+
+## 🔎 Обучение и настройка RAG
+
+### Архитектура RAG-пайплайна
+
+```
+Документы (ВНД, стратегии, KPI-фреймворки, политики)
+         │
+         ▼
+┌──────────────────────────┐
+│  1. Sentence-aware       │  Разбиение на чанки (max=300 chars, overlap=50)
+│     Chunking             │  с учётом границ предложений
+└───────────┬──────────────┘
+            ▼
+┌──────────────────────────┐
+│  2. Vectorization        │  N-gram feature hashing → 512-мерный вектор
+│     (dual encoder)       │  + BM25 инвертированный индекс
+└───────────┬──────────────┘
+            ▼
+┌──────────────────────────┐
+│  3. Hybrid Search        │  score = cosine×0.40 + BM25×0.35
+│                          │        + keyword×0.15 + doc_type×0.10
+└──────────────────────────┘
+```
+
+### Как «обучить» RAG на новых документах
+
+**Шаг 1.** Загрузите документы через API:
+```bash
+curl -X POST http://localhost:8899/api/v1/documents/ingest \
+  -H "Content-Type: application/json" \
+  -d '{
+    "documents": [{
+      "doc_id": "VND-001",
+      "doc_type": "vnd",
+      "title": "Политика управления персоналом",
+      "content": "Полный текст документа...",
+      "owner_department_id": "dep_hr",
+      "department_scope": ["dep_hr", "dep_ops"],
+      "keywords": ["управление", "персонал", "KPI"]
+    }]
+  }'
+```
+
+**Шаг 2.** Система автоматически:
+1. Разбивает `content` на sentence-aware чанки (300 chars, overlap 50)
+2. Строит N-gram hash вектор (SHA-256, 512d) для каждого чанка
+3. Добавляет в BM25 индекс (token frequency + IDF)
+4. Сохраняет метаданные (dept_scope, doc_type, keywords)
+
+**Шаг 3.** Проверьте индексацию:
+```bash
+curl http://localhost:8899/health
+# indexed_documents: 160+, indexed_chunks: > 500
+```
+
+### Типы документов для RAG
+
+| doc_type | Приоритет | Описание |
+|----------|-----------|----------|
+| `strategy` | Высший (+0.10 бонус) | Стратегические приоритеты компании |
+| `vnd` | Высокий (+0.05) | Внутренние нормативные документы |
+| `kpi` | Средний | KPI-каталоги и показатели |
+| `policy` | Базовый | Корпоративные политики |
+| `manager_goal` | Средний | Цели руководителя (для каскадирования) |
+
+### Формула гибридного скоринга
+
+```
+final_score = cosine_similarity × 0.40    (семантическое сходство)
+            + bm25_normalized   × 0.35    (точное совпадение терминов)
+            + keyword_match     × 0.15    (совпадение keywords документа)
+            + doc_type_bonus    × 0.10    (приоритет strategy > vnd > kpi)
+```
+
+### Метрики качества RAG
+
+| Метрика | Описание | Как проверить |
+|---------|----------|---------------|
+| Recall@5 | Доля relev. документов в top-5 | Генерация целей → проверить `source.doc_id` |
+| Precision@5 | Доля корректных чанков в top-5 | `source.fragment` — содержит ли запрос? |
+| Latency p50/p95 | Время поиска | `/health` → performance metrics |
+| Coverage | Сколько dept покрыто документами | `/api/v1/data/stats` → documents count |
+
+### Production-режим RAG (Qdrant)
+
+```bash
+# В docker-compose.yml уже настроен Qdrant
+VECTOR_BACKEND=qdrant
+QDRANT_URL=http://qdrant:6333
+VECTOR_COLLECTION=hr_goals
+VECTOR_SIZE=256
+```
+
+При использовании `sentence-transformers` (опционально):
+```bash
+EMBEDDING_MODEL=sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2
+```
+
+---
+
+## 🤖 Обучение и настройка LLM
+
+### Базовый режим (рекомендуется для MVP)
+
+Система использует **prompt engineering** с GPT-4o-mini:
+
+| Компонент | Файл | Промпт-стратегия |
+|-----------|------|-------------------|
+| Goal Generator | `llm.py` | System prompt со SMART-критериями + роль + RAG-контекст |
+| Goal Rewriter | `llm.py` | Переформулировка с сохранением года/квартала |
+| SMART Evaluator | `llm.py` | Оценка по 5 критериям со шкалой 0.0–1.0 |
+| OKR Mapper | `llm.py` | Маппинг на Objective + Key Results |
+
+**Настройка LLM:**
+```bash
+# Windows PowerShell:
+$env:OPENAI_API_KEY = "sk-proj-ваш-ключ"
+$env:OPENAI_MODEL = "gpt-4o-mini"    # по умолчанию
+
+# Linux/macOS:
+export OPENAI_API_KEY="sk-proj-ваш-ключ"
+export OPENAI_MODEL="gpt-4o-mini"
+```
+
+### Graceful Degradation
+
+| Режим | LLM доступен? | Поведение |
+|-------|---------------|-----------|
+| **Full** | ✅ Да | SMART rules + LLM generation + LLM rewrite + OKR mapping |
+| **Fallback** | ❌ Нет | SMART rules only + rule-based rewrite + template generation |
+
+Система **полностью работоспособна без LLM** — rule-based engine (313 строк) обеспечивает 99% accuracy.
+
+### Продвинутый режим (опционально)
+
+Для fine-tuning или LoRA-адаптации:
+
+1. **Подготовка датасета:**
+   - Цели из `goals` (9 000 записей) + `goal_reviews` (4 305 рецензий)
+   - Пары: «плохая цель → улучшенная цель» (из goal_events)
+   - Экспертные оценки из `goal_reviews.verdict`
+
+2. **LoRA/SFT обучение:**
+   ```bash
+   # Пример для Hugging Face PEFT
+   pip install peft trl
+   # Подготовка: export training pairs from DB
+   python scripts/export_training_data.py --output training_pairs.jsonl
+   # Fine-tune (optional)
+   python scripts/finetune_lora.py --base-model mistralai/Mistral-7B-Instruct-v0.3
+   ```
+
+3. **Offline оценка:**
+   - Корреляция SMART-scores с экспертной разметкой (goal_reviews)
+   - Доля структурно корректных JSON-ответов
+   - Comparison: rule-based vs LLM vs LLM+LoRA
+
+---
+
+## 📊 Метрики результатов
+
+### A. Оценка качества целей
+
+| Метрика | Значение | Описание |
+|---------|----------|----------|
+| SMART accuracy | **99%** (99/100) | 50 плохих + 50 хороших целей |
+| Средний score плохих | 0.409 | Корректно определяются как слабые |
+| Средний score хороших | 0.863 | Корректно определяются как сильные |
+| Gap (разделение) | **0.454** | Чёткая граница между плохими и хорошими |
+| False Positives | 1 | Пограничный случай (score=0.60) |
+| False Negatives | 0 | Все плохие цели выявлены |
+
+### B. Генерация целей
+
+| Метрика | Описание |
+|---------|----------|
+| SMART-соответствие | Все генерируемые цели проходят threshold (>= 0.7) |
+| Привязка к ВНД | Каждая цель имеет `source.doc_id` + `source.fragment` |
+| Авто-переформулировка | При score < 0.7 — автоматический rewrite |
+| Дубликаты | Проверка Jaccard similarity при генерации |
+
+### C. RAG Pipeline
+
+| Метрика | Описание |
+|---------|----------|
+| Hybrid search formula | cosine×0.40 + BM25×0.35 + keyword×0.15 + doc_type×0.10 |
+| Chunking | sentence-aware, 300 chars, overlap 50 |
+| Vector dim | 512 (n-gram feature hashing) |
+| Zero-dependency | Работает без GPU, без внешних API |
+
+### D. API Performance
+
+| Эндпоинт | Latency |
+|-----------|---------|
+| `/health` | < 100ms |
+| `/api/v1/goals/evaluate` | < 2s |
+| `/api/v1/goals/generate` | < 5s (с LLM), < 1s (rule-based) |
+| `/api/v1/dashboard/overview` | < 500ms |
+
+### E. Тестовые сьюты — 251 тест
+
+| Тест-сьют | Тестов | Результат |
+|-----------|--------|-----------|
+| Contract Tests | 15 | ✅ 15/15 |
+| Comprehensive QA | 61 | ✅ 61/61 |
+| Frontend Functional | 34 | ✅ 34/34 |
+| Smoke Endpoints | 17 | ✅ 17/17 |
+| Quick Tests | 16 | ✅ 16/16 |
+| Demo Tests | 8 | ✅ 8/8 |
+| Diagnostic (accuracy) | 100 | ✅ 99/100 |
+| **ИТОГО** | **251** | **250/251 (99.6%)** |
+
+---
+
+## �📁 Структура проекта
 
 ```
 GoalCraft_AI/
