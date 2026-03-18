@@ -181,33 +181,33 @@
 <pre style="background:#f8fafc; text-align:left; padding:15px; border-radius:10px; font-size:1.1em;"><code>
 ┌──────────────────────────────────────────────────────────────────┐
 │               React 18 + TypeScript + Vite (SPA)                 │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌────────┐ │
-│  │Dashboard │ │ Evaluate │ │ Generate │ │ Cascade │ │Maturity│ │
-│  └──────────┘ └──────────┘ └──────────┘ └─────────┘ └────────┘ │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌────────┐   │
+│  │Dashboard │ │ Evaluate │ │ Generate │ │ Cascade │ │Maturity│   │
+│  └──────────┘ └──────────┘ └──────────┘ └─────────┘ └────────┘   │
 └───────────────────────────┬──────────────────────────────────────┘
                             │ HTTP REST API (JSON, Vite proxy)
 ┌───────────────────────────┼──────────────────────────────────────┐
-│              FastAPI Backend — 16 endpoints                       │
+│              FastAPI Backend — 16 endpoints                      │
 │  ┌────────────────────────┴───────────────────────────────────┐  │
 │  │              API Router (routes.py, 228 строк)             │  │
 │  │  /health  /evaluate  /generate  /rewrite  /batch           │  │
-│  │  /cascade /dashboard /maturity /notifications /ingest       │  │
-│  │  /history /data/stats /departments /employees /context      │  │
+│  │  /cascade /dashboard /maturity /notifications /ingest      │  │
+│  │  /history /data/stats /departments /employees /context     │  │
 │  └────────────────────────┬───────────────────────────────────┘  │
 │  ┌────────────────────────┴───────────────────────────────────┐  │
 │  │           GoalEngine (engine.py, 1 114 строк)              │  │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────┐   │  │
-│  │  │ SMART Rules  │  │  LLM Service │  │  RAG / Vector  │   │  │
-│  │  │ (rules.py)   │  │  (llm.py)    │  │  Hybrid Search │   │  │
-│  │  │ 313 строк    │  │  GPT-4o-mini │  │  229 строк     │   │  │
-│  │  │ Deterministic│  │  210 строк   │  │  N-gram + BM25 │   │  │
-│  │  └──────────────┘  └──────────────┘  └────────────────┘   │  │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────┐    │  │
+│  │  │ SMART Rules  │  │  LLM Service │  │  RAG / Vector  │    │  │
+│  │  │ (rules.py)   │  │  (llm.py)    │  │  Hybrid Search │    │  │
+│  │  │ 313 строк    │  │  GPT-4o-mini │  │  229 строк     │    │  │
+│  │  │ Deterministic│  │  210 строк   │  │  N-gram + BM25 │    │  │
+│  │  └──────────────┘  └──────────────┘  └────────────────┘    │  │
 │  └────────────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────┐  ┌───────────────────────────────┐    │
-│  │   Storage Layer      │  │    Vector Store Layer          │    │
-│  │ Memory (503) / PG    │  │  Memory (229) / Qdrant (175)  │    │
-│  │        (569 строк)   │  │                               │    │
-│  └──────────────────────┘  └───────────────────────────────┘    │
+│  ┌──────────────────────┐  ┌───────────────────────────────┐     │
+│  │   Storage Layer      │  │    Vector Store Layer         │     │
+│  │ Memory (503) / PG    │  │  Memory (229) / Qdrant (175)  │     │
+│  │        (569 строк)   │  │                               │     │
+│  └──────────────────────┘  └───────────────────────────────┘     │
 └──────────────────────────────────────────────────────────────────┘
 </code></pre>
   </div>

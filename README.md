@@ -151,37 +151,37 @@ psql -U postgres -d hr_goal_ai -f hackathon_dump.sql
 ### Общая схема (§5)
 
 ```
-┌──────────────────────────────────────────────────────────────────┐
-│                  React 18 + TypeScript + Vite                    │
-│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌────────┐ │
-│  │Dashboard │ │ Evaluate │ │ Generate │ │ Cascade │ │Maturity│ │
-│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬────┘ └───┬────┘ │
+┌─────────────────────────────────────────────────────────────────┐
+│                  React 18 + TypeScript + Vite                   │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌────────┐  │
+│  │Dashboard │ │ Evaluate │ │ Generate │ │ Cascade │ │Maturity│  │
+│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬────┘ └───┬────┘  │
 │       └─────────────┼───────────┼─────────────┘          │      │
 │                     │  HTTP REST API (Vite proxy)        │      │
 └─────────────────────┼───────────┼────────────────────────┘──────┘
                       │           │
 ┌─────────────────────┼───────────┼───────────────────────────────┐
-│                FastAPI Backend (17 endpoints)                    │
+│                FastAPI Backend (17 endpoints)                   │
 │  ┌──────────────────┴───────────┴────────────────────────────┐  │
 │  │                API Router (routes.py, 179 lines)          │  │
 │  │  /health  /evaluate  /generate  /rewrite  /batch          │  │
-│  │  /cascade /dashboard /maturity /ingest /context            │  │
-│  │  /history  /data/stats  /notifications  /departments       │  │
+│  │  /cascade /dashboard /maturity /ingest /context           │  │
+│  │  /history  /data/stats  /notifications  /departments      │  │
 │  └──────────────────┬────────────────────────────────────────┘  │
 │  ┌──────────────────┴────────────────────────────────────────┐  │
 │  │             GoalEngine (engine.py, 989 lines)             │  │
-│  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────┐  │  │
-│  │  │ SMART Rules  │  │  LLM Service │  │  RAG / Vector  │  │  │
-│  │  │ (rules.py)   │  │  (llm.py)    │  │  Hybrid Search │  │  │
-│  │  │ 313 lines    │  │  GPT-4o-mini │  │  N-gram + BM25 │  │  │
-│  │  │ Deterministic│  │  210 lines   │  │  188 lines     │  │  │
-│  │  └──────────────┘  └──────────────┘  └────────────────┘  │  │
+│  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────┐   │  │
+│  │  │ SMART Rules  │  │  LLM Service │  │  RAG / Vector  │   │  │
+│  │  │ (rules.py)   │  │  (llm.py)    │  │  Hybrid Search │   │  │
+│  │  │ 313 lines    │  │  GPT-4o-mini │  │  N-gram + BM25 │   │  │
+│  │  │ Deterministic│  │  210 lines   │  │  188 lines     │   │  │
+│  │  └──────────────┘  └──────────────┘  └────────────────┘   │  │
 │  └───────────────────────────────────────────────────────────┘  │
-│  ┌──────────────────────┐  ┌───────────────────────────────┐   │
-│  │   Storage Layer      │  │    Vector Store Layer          │   │
-│  │  Memory (503 lines)  │  │  Memory (188 lines) — demo    │   │
-│  │  Postgres (569 lines)│  │  Qdrant (175 lines) — prod    │   │
-│  └──────────────────────┘  └───────────────────────────────┘   │
+│  ┌──────────────────────┐  ┌───────────────────────────────┐    │
+│  │   Storage Layer      │  │    Vector Store Layer         │    │
+│  │  Memory (503 lines)  │  │  Memory (188 lines) — demo    │    │
+│  │  Postgres (569 lines)│  │  Qdrant (175 lines) — prod    │    │
+│  └──────────────────────┘  └───────────────────────────────┘    │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
