@@ -137,5 +137,20 @@ for sub in c["subordinates"][:3]:
     print(f"  {sub['employee_name']} ({sub['position']}): {len(sub['goals'])} goals")
 print()
 
+# 12. Goal history (F-15 versioning)
+r = requests.get(f"{BASE}/api/v1/goals/goal_hr_001/history")
+hist = r.json()
+print("=== 12. GOAL HISTORY (F-15) ===")
+print(f"Goal: {hist['goal_id']}, Events: {hist['total_events']}, Reviews: {hist['total_reviews']}")
+print()
+
+# 13. Data stats (dump verification)
+r = requests.get(f"{BASE}/api/v1/data/stats")
+stats = r.json()
+print("=== 13. DATA STATS ===")
+print(f"Departments: {stats['departments']}, Employees: {stats['employees']}, Goals: {stats['goals']}")
+print(f"Has dump data: {stats['has_dump_data']}")
+print()
+
 print("=" * 60)
-print("✅ ALL 11 ENDPOINT TESTS PASSED SUCCESSFULLY!")
+print("✅ ALL 13 ENDPOINT TESTS PASSED SUCCESSFULLY!")

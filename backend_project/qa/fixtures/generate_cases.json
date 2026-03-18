@@ -1,6 +1,7 @@
 [
   {
     "name": "default_generation_hrbp",
+    "description": "§3.2 F-09: генерация для HR Business Partner",
     "request": {
       "employee_id": "emp_1",
       "quarter": "Q2",
@@ -11,6 +12,60 @@
     "expect": {
       "count": 3,
       "score_min": 0.6,
+      "source_required": true,
+      "allowed_alignment_levels": ["strategic", "functional", "operational"],
+      "allowed_goal_types": ["impact-based", "output-based", "activity-based"]
+    }
+  },
+  {
+    "name": "generate_for_recruiter",
+    "description": "§3.2 F-09: генерация для рекрутера (dep_rec)",
+    "request": {
+      "employee_id": "emp_4",
+      "quarter": "Q2",
+      "year": 2026,
+      "count": 3,
+      "focus": "подбор и адаптация персонала"
+    },
+    "expect": {
+      "count": 3,
+      "score_min": 0.6,
+      "source_required": true,
+      "allowed_alignment_levels": ["strategic", "functional", "operational"],
+      "allowed_goal_types": ["impact-based", "output-based", "activity-based"]
+    }
+  },
+  {
+    "name": "generate_for_lnd_specialist",
+    "description": "§3.2 F-09: генерация для L&D специалиста (dep_lnd)",
+    "request": {
+      "employee_id": "emp_2",
+      "quarter": "Q2",
+      "year": 2026,
+      "count": 3,
+      "focus": "обязательное обучение и развитие компетенций"
+    },
+    "expect": {
+      "count": 3,
+      "score_min": 0.6,
+      "source_required": true,
+      "allowed_alignment_levels": ["strategic", "functional", "operational"],
+      "allowed_goal_types": ["impact-based", "output-based", "activity-based"]
+    }
+  },
+  {
+    "name": "generate_5_goals_max",
+    "description": "§3.2 F-16: генерация максимума 5 целей",
+    "request": {
+      "employee_id": "emp_5",
+      "quarter": "Q2",
+      "year": 2026,
+      "count": 5,
+      "focus": "HR-аналитика и отчётность"
+    },
+    "expect": {
+      "count": 5,
+      "score_min": 0.55,
       "source_required": true,
       "allowed_alignment_levels": ["strategic", "functional", "operational"],
       "allowed_goal_types": ["impact-based", "output-based", "activity-based"]

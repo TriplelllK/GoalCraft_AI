@@ -157,6 +157,18 @@
       "endpoint": "GET /api/v1/employees/emp_1/context?quarter=Q2&year=2026",
       "request": null,
       "expected": "Данные сотрудника, подразделение, должность, руководитель, активные цели"
+    },
+    {
+      "name": "15. История изменений цели (F-15 versioning)",
+      "endpoint": "GET /api/v1/goals/goal_hr_001/history",
+      "request": null,
+      "expected": "goal_id, events[], reviews[], total_events, total_reviews"
+    },
+    {
+      "name": "16. Статистика данных (проверка дампа §4.2)",
+      "endpoint": "GET /api/v1/data/stats",
+      "request": null,
+      "expected": "departments: 8, employees >= 6, goals >= 18, has_dump_data: false (demo) / true (с дампом)"
     }
   ],
 

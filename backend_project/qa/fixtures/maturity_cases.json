@@ -1,6 +1,7 @@
 [
   {
     "name": "hr_department_maturity",
+    "description": "F-22: индекс зрелости HR-подразделения (dep_hr — основное тестовое)",
     "request": {
       "department_id": "dep_hr",
       "quarter": "Q2",
@@ -11,6 +12,26 @@
       "total_employees_min": 1,
       "employees_with_goals_min": 1,
       "total_goals_min": 2,
+      "has_smart_distribution": true,
+      "has_goal_type_distribution": true,
+      "has_alignment_distribution": true,
+      "has_weakest_criteria": true,
+      "has_recommendations": true
+    }
+  },
+  {
+    "name": "lnd_department_maturity",
+    "description": "F-22: индекс зрелости L&D (dep_lnd — подразделение с целями в Q1)",
+    "request": {
+      "department_id": "dep_lnd",
+      "quarter": "Q1",
+      "year": 2026
+    },
+    "expect": {
+      "maturity_index_min": 0.1,
+      "total_employees_min": 1,
+      "employees_with_goals_min": 1,
+      "total_goals_min": 1,
       "has_smart_distribution": true,
       "has_goal_type_distribution": true,
       "has_alignment_distribution": true,

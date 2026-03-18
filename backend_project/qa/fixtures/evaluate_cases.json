@@ -54,5 +54,69 @@
       "source_required": true,
       "rewrite_min_length": 50
     }
+  },
+  {
+    "name": "unrealistic_goal_achievability",
+    "description": "§3.1/F-20: нереалистичная цель — система должна детектировать",
+    "request": {
+      "employee_id": "emp_1",
+      "goal_text": "Увеличить производительность HR-блока в 10 раз за квартал без дополнительного бюджета",
+      "quarter": "Q2",
+      "year": 2026
+    },
+    "expect": {
+      "overall_score_max": 0.55,
+      "recommendations_contains": ["метрик"],
+      "rewrite_min_length": 50
+    }
+  },
+  {
+    "name": "metric_without_deadline",
+    "description": "Есть метрика, но нет дедлайна — timebound должен быть низким",
+    "request": {
+      "employee_id": "emp_3",
+      "goal_text": "Снизить текучесть персонала до 8% за счет внедрения программы удержания ключевых сотрудников",
+      "quarter": "Q2",
+      "year": 2026
+    },
+    "expect": {
+      "overall_score_max": 0.85,
+      "overall_score_min": 0.45,
+      "recommendations_contains": ["Указать срок"],
+      "source_required": true,
+      "rewrite_min_length": 50
+    }
+  },
+  {
+    "name": "process_not_result",
+    "description": "Процессная формулировка без результата — §3.1 F-19 activity-based",
+    "request": {
+      "employee_id": "emp_2",
+      "goal_text": "Регулярно проводить обучающие вебинары для сотрудников",
+      "quarter": "Q2",
+      "year": 2026
+    },
+    "expect": {
+      "overall_score_max": 0.55,
+      "goal_type": "activity-based",
+      "recommendations_contains": ["Добавить метрику"],
+      "rewrite_min_length": 50
+    }
+  },
+  {
+    "name": "recruiter_strong_goal",
+    "description": "Сильная цель рекрутера — другая роль и подразделение (dep_rec)",
+    "request": {
+      "employee_id": "emp_4",
+      "goal_text": "До 30.06 снизить средний срок закрытия вакансий с 45 до 30 рабочих дней за счет внедрения системы автоматического скрининга резюме",
+      "quarter": "Q2",
+      "year": 2026
+    },
+    "expect": {
+      "overall_score_min": 0.75,
+      "goal_type": "impact-based",
+      "source_required": true,
+      "rewrite_min_length": 50
+    }
   }
 ]

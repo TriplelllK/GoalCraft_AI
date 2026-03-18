@@ -103,6 +103,10 @@ class TestRunner:
         assert_true(payload["employee"]["id"] == "emp_1", "wrong employee id")
         assert_true(payload["department"]["id"] == "dep_hr", "wrong department")
         assert_true(len(payload["active_goals"]) >= 2, "seeded employee should have at least 2 active goals")
+        # §4.2 extended context fields
+        assert_true("projects" in payload, "projects field missing from employee context")
+        assert_true("department_kpis" in payload, "department_kpis field missing from employee context")
+        assert_true("goal_history_stats" in payload, "goal_history_stats field missing from employee context")
         return payload
 
     def check_ingest(self) -> Any:
@@ -263,6 +267,27 @@ class TestRunner:
             })
         return previews
 
+    def check_goal_history(self) -> Any:
+        """F-15: Check goal history/versioning endpoint."""
+        status, payload = self.client.get("/api/v1/goals/goal_hr_001/history")
+        assert_true(status == 200, f"goal history returned {status}")
+        assert_true(payload["goal_id"] == "goal_hr_001", "wrong goal_id")
+        assert_true("events" in payload, "events list missing")
+        assert_true("reviews" in payload, "reviews list missing")
+        assert_true("total_events" in payload, "total_events missing")
+        assert_true("total_reviews" in payload, "total_reviews missing")
+        return payload
+
+    def check_data_stats(self) -> Any:
+        """§4.2: Check data stats endpoint for dump verification."""
+        status, payload = self.client.get("/api/v1/data/stats")
+        assert_true(status == 200, f"data stats returned {status}")
+        assert_true(payload["departments"] == 8, "expected 8 departments")
+        assert_true(payload["employees"] >= 6, "expected at least 6 employees")
+        assert_true(payload["goals"] >= 18, "expected at least 18 goals")
+        assert_true("has_dump_data" in payload, "has_dump_data field missing")
+        return payload
+
     def run_all(self) -> dict[str, Any]:
         self.run_case("health", self.check_health)
         self.run_case("employee_context", self.check_employee_context)
@@ -274,6 +299,8 @@ class TestRunner:
         self.run_case("achievability_check", self.check_achievability)
         self.run_case("cascade_goals", self.check_cascade_cases)
         self.run_case("maturity_report", self.check_maturity_cases)
+        self.run_case("goal_history", self.check_goal_history)
+        self.run_case("data_stats", self.check_data_stats)
         passed = sum(1 for item in self.results if item["status"] == "passed")
         failed = len(self.results) - passed
         return {

@@ -17,6 +17,10 @@ print("1. HEALTH CHECK")
 print("=" * 60)
 h = api_get("/health")
 print(f"   Status: {h['status']}  |  LLM: {h['llm_enabled']}  |  Documents: {h['indexed_documents']}")
+print(f"   Employees: {h['employees_count']}  |  Goals: {h['goals_count']}  |  Mode: {h['mode']}")
+assert h["status"] == "ok"
+assert h["employees_count"] >= 6
+assert h["goals_count"] >= 18
 
 print("\n" + "=" * 60)
 print("2. EVALUATE WEAK GOAL")
@@ -92,5 +96,22 @@ for rec in r.get("recommendations", [])[:2]:
     print(f"   Rec: {rec[:80]}")
 
 print("\n" + "=" * 60)
-print("ALL 6 CHECKS PASSED!")
+print("7. GOAL HISTORY — F-15 versioning")
+print("=" * 60)
+r = api_get("/api/v1/goals/goal_hr_001/history")
+print(f"   Goal: {r['goal_id']}  |  Events: {r['total_events']}  |  Reviews: {r['total_reviews']}")
+assert r["goal_id"] == "goal_hr_001"
+assert "events" in r and "reviews" in r
+
+print("\n" + "=" * 60)
+print("8. DATA STATS — dump verification")
+print("=" * 60)
+r = api_get("/api/v1/data/stats")
+print(f"   Departments: {r['departments']}  |  Employees: {r['employees']}  |  Goals: {r['goals']}")
+print(f"   Has dump data: {r['has_dump_data']}")
+assert r["departments"] == 8
+assert r["employees"] >= 6
+
+print("\n" + "=" * 60)
+print("ALL 8 CHECKS PASSED!")
 print("=" * 60)
