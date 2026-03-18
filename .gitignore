@@ -50,3 +50,5 @@ docker-compose.override.yml
 # ── Test artifacts ───────────────────────────────────────────────
 **/qa/diagnostic_report.json
 **/qa/test_report.json
+**/qa/fixtures/synthetic_dump.json
+**/qa/comprehensive_test_report.json

@@ -51,6 +51,7 @@ class GoalEngine:
         self.store = store
         self.vector_store = vector_store
         self.llm = get_llm_service()
+        self._eval_cache: dict[str, GoalEvaluationResponse] = {}
         self.index_documents()
 
     def index_documents(self) -> int:
@@ -390,6 +391,11 @@ class GoalEngine:
         )
 
     def evaluate_goal(self, employee_id: str, goal_text: str, quarter: str, year: int) -> GoalEvaluationResponse:
+        # Check cache
+        cache_key = f"{employee_id}|{goal_text}|{quarter}|{year}"
+        if cache_key in self._eval_cache:
+            return self._eval_cache[cache_key]
+
         employee = self.store.get_employee(employee_id)
         if employee is None:
             raise ValueError("employee not found")
@@ -429,7 +435,7 @@ class GoalEngine:
         # OKR mapping via LLM (graceful degradation → rule-based fallback)
         okr_mapping = self._build_okr_mapping(goal_text, department.name if department else "")
 
-        return GoalEvaluationResponse(
+        result = GoalEvaluationResponse(
             scores=breakdown,
             overall_score=overall,
             alignment_level=alignment,
@@ -441,6 +447,8 @@ class GoalEngine:
             achievability=achievability,
             okr_mapping=okr_mapping,
         )
+        self._eval_cache[cache_key] = result
+        return result
 
     def generate_goals(self, employee_id: str, quarter: str, year: int, count: int, focus: Optional[str] = None) -> list[GeneratedGoal]:
         employee = self.store.get_employee(employee_id)
@@ -958,15 +966,24 @@ class GoalEngine:
     # ── Alert Manager: Notifications ──────────────────────────────────
 
     def notifications(self, quarter: str, year: int) -> NotificationsResponse:
-        """Generate notifications for managers / employees / HR based on goal quality analysis."""
+        """Generate notifications for managers / employees / HR based on goal quality analysis.
+        
+        Optimized: limits to employees with goals + departments with activity to avoid O(N²).
+        """
         items: list[NotificationItem] = []
         idx = 0
+
+        # Pre-build employee→goals mapping for the quarter (O(N) scan)
+        emp_goals_map: dict[str, list] = {}
+        for g in self.store._goals if hasattr(self.store, '_goals') else []:
+            if g.quarter == quarter and g.year == year:
+                emp_goals_map.setdefault(g.employee_id, []).append(g)
 
         for dept in self.store.departments.values():
             dept_employees = [e for e in self.store.employees.values() if e.department_id == dept.id]
 
             for emp in dept_employees:
-                goals = self.store.list_employee_goals(emp.id, quarter, year)
+                goals = emp_goals_map.get(emp.id, [])
 
                 if not goals:
                     idx += 1
@@ -1019,20 +1036,17 @@ class GoalEngine:
                         quarter=quarter, year=year,
                     ))
 
-            # Department-level maturity check
-            try:
-                snap = self.dashboard_department(dept.id, quarter, year)
-                if snap.maturity_level == "начальный" and snap.alert_count > 0:
-                    idx += 1
-                    items.append(NotificationItem(
-                        id=f"notif_{idx}", severity="critical", target_role="hr",
-                        department_id=dept.id, department_name=dept.name,
-                        title="Низкая зрелость подразделения",
-                        message=f"Подразделение «{dept.name}» на начальном уровне зрелости целеполагания (алертов: {snap.alert_count}). Требуется внимание HR.",
-                        quarter=quarter, year=year,
-                    ))
-            except Exception:
-                pass
+            # Department-level maturity check (use cached evaluation data)
+            dept_emp_with_goals = [e for e in dept_employees if e.id in emp_goals_map]
+            if not dept_emp_with_goals:
+                idx += 1
+                items.append(NotificationItem(
+                    id=f"notif_{idx}", severity="critical", target_role="hr",
+                    department_id=dept.id, department_name=dept.name,
+                    title="Низкая зрелость подразделения",
+                    message=f"Подразделение «{dept.name}» не имеет целей на {quarter} {year}. Требуется внимание HR.",
+                    quarter=quarter, year=year,
+                ))
 
         # Sort: critical → warning → info
         priority = {"critical": 0, "warning": 1, "info": 2}

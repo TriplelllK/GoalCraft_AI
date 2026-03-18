@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import json
 from datetime import date
+from pathlib import Path
 from typing import Optional
 
 from app.models.schemas import (
@@ -451,9 +453,102 @@ class MemoryStore:
             "goal_reviews": len(self._goal_reviews),
             "kpi_catalog": len(self._kpi_catalog),
             "kpi_timeseries": len(self._kpi_timeseries),
+            "projects": len(getattr(self, "_projects", {})),
+            "systems": len(getattr(self, "_systems", {})),
+            "project_systems": len(getattr(self, "_project_systems", [])),
+            "employee_projects": len(self._employee_projects),
         }
         return mapping.get(table_name, 0)
 
     def has_dump_data(self) -> bool:
         """Check if we have significant data loaded (from organizer dump)."""
         return len(self.employees) > 50
+
+    # ── Dump loader ──────────────────────────────────────────────────
+
+    def load_synthetic_dump(self, dump_path: str | Path) -> dict[str, int]:
+        """Load a synthetic §4.2 JSON dump into memory, replacing demo seed data."""
+        dump_path = Path(dump_path)
+        data = json.loads(dump_path.read_text(encoding="utf-8"))
+
+        # Clear existing data
+        self.departments.clear()
+        self.positions.clear()
+        self.employees.clear()
+        self._documents.clear()
+        self._goals.clear()
+        self._goal_events.clear()
+        self._goal_reviews.clear()
+        self._kpi_catalog.clear()
+        self._kpi_timeseries.clear()
+        self._employee_projects.clear()
+        self._projects: dict[str, dict] = {}
+        self._systems: dict[str, dict] = {}
+        self._project_systems: list[dict] = []
+
+        # Load departments
+        for d in data.get("departments", []):
+            self.departments[d["id"]] = Department(**d)
+
+        # Load positions
+        for p in data.get("positions", []):
+            self.positions[p["id"]] = Position(**p)
+
+        # Load employees
+        for e in data.get("employees", []):
+            self.employees[e["id"]] = Employee(**e)
+
+        # Load documents
+        for doc in data.get("documents", []):
+            self._documents[doc["doc_id"]] = Document(**doc)
+
+        # Load goals
+        for g in data.get("goals", []):
+            self._goals.append(Goal(**g))
+
+        # Load projects
+        for p in data.get("projects", []):
+            self._projects[p["id"]] = p
+
+        # Load systems
+        for s in data.get("systems", []):
+            self._systems[s["id"]] = s
+
+        # Load project_systems
+        self._project_systems = data.get("project_systems", [])
+
+        # Load employee_projects
+        self._employee_projects = data.get("employee_projects", [])
+
+        # Load goal_events
+        for evt in data.get("goal_events", []):
+            self._goal_events.append(GoalEvent(**evt))
+
+        # Load goal_reviews
+        for rev in data.get("goal_reviews", []):
+            self._goal_reviews.append(GoalReview(**rev))
+
+        # Load KPI catalog
+        for kpi in data.get("kpi_catalog", []):
+            self._kpi_catalog[kpi["id"]] = KpiCatalog(**kpi)
+
+        # Load KPI timeseries
+        for ts in data.get("kpi_timeseries", []):
+            self._kpi_timeseries.append(KpiTimeseries(**ts))
+
+        stats = {
+            "departments": len(self.departments),
+            "positions": len(self.positions),
+            "employees": len(self.employees),
+            "documents": len(self._documents),
+            "goals": len(self._goals),
+            "projects": len(self._projects),
+            "systems": len(self._systems),
+            "project_systems": len(self._project_systems),
+            "employee_projects": len(self._employee_projects),
+            "goal_events": len(self._goal_events),
+            "goal_reviews": len(self._goal_reviews),
+            "kpi_catalog": len(self._kpi_catalog),
+            "kpi_timeseries": len(self._kpi_timeseries),
+        }
+        return stats

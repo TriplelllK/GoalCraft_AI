@@ -447,6 +447,10 @@ ok
   "employees": 6,
   "documents": 12,
   "goals": 18,
+  "projects": 0,
+  "systems": 0,
+  "project_systems": 0,
+  "employee_projects": 0,
   "goal_events": 0,
   "goal_reviews": 0,
   "kpi_catalog": 0,
@@ -518,8 +522,8 @@ ok
 
 ```json
 {
-  "total": 6,
-  "critical": 1,
+  "total": 11,
+  "critical": 6,
   "warnings": 5
 }
 ```

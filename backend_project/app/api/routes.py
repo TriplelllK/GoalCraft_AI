@@ -215,6 +215,7 @@ async def data_stats(ctx: AppContainer = Depends(get_container)):
     """Return counts for all tables — useful for verifying dump load."""
     tables = [
         "departments", "positions", "employees", "documents", "goals",
+        "projects", "systems", "project_systems", "employee_projects",
         "goal_events", "goal_reviews", "kpi_catalog", "kpi_timeseries",
     ]
     stats = {}

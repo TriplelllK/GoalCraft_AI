@@ -113,12 +113,18 @@ class PostgresStore:
         CREATE TABLE IF NOT EXISTS goals (
             id TEXT PRIMARY KEY,
             employee_id TEXT NOT NULL REFERENCES employees(id),
+            department_id TEXT NOT NULL DEFAULT '',
+            position TEXT NOT NULL DEFAULT '',
             title TEXT NOT NULL,
+            goal_text TEXT NOT NULL DEFAULT '',
             description TEXT NOT NULL DEFAULT '',
+            metric TEXT NOT NULL DEFAULT '',
+            deadline DATE NULL,
             status TEXT NOT NULL DEFAULT 'draft',
             quarter TEXT NOT NULL,
             year INTEGER NOT NULL,
             weight DOUBLE PRECISION NULL,
+            reviewer_comment TEXT NOT NULL DEFAULT '',
             created_at TIMESTAMPTZ DEFAULT NOW(),
             updated_at TIMESTAMPTZ DEFAULT NOW()
         );
@@ -265,13 +271,13 @@ class PostgresStore:
         )
         cur.executemany(
             """
-            INSERT INTO goals (id, employee_id, title, quarter, year, weight)
-            VALUES (%s, %s, %s, %s, %s, %s)
+            INSERT INTO goals (id, employee_id, department_id, position, title, goal_text, quarter, year, weight)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             ON CONFLICT (id) DO NOTHING
             """,
             [
-                ("goal_demo_1", "emp_1", "До конца Q2 довести долю целей, привязанных к KPI подразделения, до 85%", "Q2", 2026, 50.0),
-                ("goal_demo_2", "emp_1", "До 30.06 сократить средний срок согласования HR-заявок с 5 до 3 рабочих дней", "Q2", 2026, 50.0),
+                ("goal_demo_1", "emp_1", "dep_hr", "HR Business Partner", "До конца Q2 довести долю целей, привязанных к KPI подразделения, до 85%", "До конца Q2 довести долю целей, привязанных к KPI подразделения, до 85%", "Q2", 2026, 50.0),
+                ("goal_demo_2", "emp_1", "dep_hr", "HR Business Partner", "До 30.06 сократить средний срок согласования HR-заявок с 5 до 3 рабочих дней", "До 30.06 сократить средний срок согласования HR-заявок с 5 до 3 рабочих дней", "Q2", 2026, 50.0),
             ],
         )
 
@@ -318,14 +324,20 @@ class PostgresStore:
         return Goal(
             id=row[0],
             employee_id=row[1],
-            title=row[2],
-            description=row[3],
-            status=row[4],
-            quarter=row[5],
-            year=row[6],
-            weight=row[7],
-            created_at=row[8].isoformat() if row[8] else '',
-            updated_at=row[9].isoformat() if row[9] else '',
+            department_id=row[2],
+            position=row[3],
+            title=row[4],
+            goal_text=row[5],
+            description=row[6],
+            metric=row[7],
+            deadline=row[8],
+            status=row[9],
+            quarter=row[10],
+            year=row[11],
+            weight=row[12],
+            reviewer_comment=row[13],
+            created_at=row[14].isoformat() if row[14] else '',
+            updated_at=row[15].isoformat() if row[15] else '',
         )
 
     def get_employee(self, employee_id: str) -> Optional[Employee]:
@@ -353,7 +365,7 @@ class PostgresStore:
         with self._connect() as conn, conn.cursor() as cur:
             cur.execute(
                 """
-                SELECT id, employee_id, title, COALESCE(description, ''), status, quarter, year, weight, created_at, updated_at
+                SELECT id, employee_id, COALESCE(department_id,''), COALESCE(position,''), title, COALESCE(goal_text,''), COALESCE(description,''), COALESCE(metric,''), deadline, status, quarter, year, weight, COALESCE(reviewer_comment,''), created_at, updated_at
                 FROM goals WHERE employee_id = %s AND quarter = %s AND year = %s
                 ORDER BY created_at
                 """,
@@ -465,7 +477,7 @@ class PostgresStore:
 
     def list_all_goals_for_position(self, position_id: str, exclude_quarter: Optional[str] = None, exclude_year: Optional[int] = None) -> list[Goal]:
         sql = """
-            SELECT g.id, g.employee_id, g.title, COALESCE(g.description,''), g.status, g.quarter, g.year, g.weight, g.created_at, g.updated_at
+            SELECT g.id, g.employee_id, COALESCE(g.department_id,''), COALESCE(g.position,''), g.title, COALESCE(g.goal_text,''), COALESCE(g.description,''), COALESCE(g.metric,''), g.deadline, g.status, g.quarter, g.year, g.weight, COALESCE(g.reviewer_comment,''), g.created_at, g.updated_at
             FROM goals g JOIN employees e ON g.employee_id = e.id
             WHERE e.position_id = %s
         """
@@ -480,7 +492,7 @@ class PostgresStore:
 
     def list_all_goals_for_department(self, department_id: str, exclude_quarter: Optional[str] = None, exclude_year: Optional[int] = None) -> list[Goal]:
         sql = """
-            SELECT g.id, g.employee_id, g.title, COALESCE(g.description,''), g.status, g.quarter, g.year, g.weight, g.created_at, g.updated_at
+            SELECT g.id, g.employee_id, COALESCE(g.department_id,''), COALESCE(g.position,''), g.title, COALESCE(g.goal_text,''), COALESCE(g.description,''), COALESCE(g.metric,''), g.deadline, g.status, g.quarter, g.year, g.weight, COALESCE(g.reviewer_comment,''), g.created_at, g.updated_at
             FROM goals g JOIN employees e ON g.employee_id = e.id
             WHERE e.department_id = %s
         """
