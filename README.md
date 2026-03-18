@@ -1,17 +1,33 @@
 # 🎯 GoalCraft AI — HR Performance Management Platform
 
 <p align="center">
-  <img src="https://img.shields.io/badge/Python-3.11-blue?logo=python" alt="Python">
+  <img src="https://img.shields.io/badge/Python-3.11+-blue?logo=python" alt="Python">
   <img src="https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi" alt="FastAPI">
   <img src="https://img.shields.io/badge/React-18-61DAFB?logo=react" alt="React">
+  <img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript" alt="TypeScript">
   <img src="https://img.shields.io/badge/OpenAI-GPT--4o--mini-412991?logo=openai" alt="OpenAI">
-  <img src="https://img.shields.io/badge/Accuracy-100%25-brightgreen" alt="Accuracy">
-  <img src="https://img.shields.io/badge/Tests-10%2F10-brightgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/Tests-251-brightgreen" alt="Tests">
+  <img src="https://img.shields.io/badge/Accuracy-99%25-brightgreen" alt="Accuracy">
+  <img src="https://img.shields.io/badge/LOC-8275-informational" alt="LOC">
 </p>
 
-**GoalCraft AI** — интеллектуальная платформа для управления целями сотрудников (Performance Management), которая автоматически оценивает, генерирует и улучшает рабочие цели по комбинированной методологии **SMART + OKR** с использованием гибридного подхода: детерминированные правила + LLM (GPT-4o-mini).
+**GoalCraft AI** — интеллектуальная платформа для управления целями сотрудников (Performance Management), которая автоматически оценивает, генерирует и улучшает рабочие цели по комбинированной методологии **SMART + OKR** с использованием гибридного подхода: детерминированные правила + LLM (GPT-4o-mini) + RAG-поиск по корпоративным документам.
 
 > 🏆 Проект создан в рамках хакатона по теме «Внедрение ИИ в HR-процессы»
+> 📖 Подробная техническая документация: [backend_project/README.md](backend_project/README.md)
+
+---
+
+## 📋 Содержание
+
+1. [Соответствие ТЗ](#-соответствие-тз)
+2. [Архитектура](#️-архитектура)
+3. [Критерии оценки хакатона](#-критерии-оценки-хакатона-6)
+4. [Инструкция для заказчика](#-инструкция-для-заказчика-как-проверить-проект)
+5. [Результаты тестирования](#-результаты-тестирования)
+6. [Установка и запуск](#-установка-и-запуск)
+7. [Конфигурация](#️-конфигурация)
+8. [Структура проекта](#-структура-проекта)
 
 ---
 
@@ -21,7 +37,7 @@
 
 | Требование ТЗ | Реализация | Статус |
 |----------------|-----------|--------|
-| SMART-оценка по 5 критериям (S/M/A/R/T) | `rules.py`: 40+ глаголов, 60+ объектов, regex-паттерны | ✅ |
+| SMART-оценка по 5 критериям (S/M/A/R/T) | `rules.py`: 40+ глаголов, 60+ объектов, regex-паттерны, 313 строк | ✅ |
 | Итоговый индекс (Float 0.0–1.0) | `overall_score` — среднее 5 SMART-критериев | ✅ |
 | Рекомендации (Text список) | Контекстные рекомендации по каждому слабому критерию | ✅ |
 | Переформулировка AI | LLM-переписывание + rule-based fallback | ✅ |
@@ -42,7 +58,7 @@
 | **F-17** | Стратегическая связка: strategic / functional / operational + источник | ✅ |
 | **F-18** | Контроль веса целей (суммарный вес ≠ 100% → предупреждение) | ✅ |
 | **F-19** | Тип цели: activity-based / output-based / impact-based | ✅ |
-| **F-20** | Достижимость на основе исторических данных (аналогичные роли/подразделения) | ✅ |
+| **F-20** | Достижимость на основе исторических данных (Jaccard similarity, F-20) | ✅ |
 | **F-21** | Проверка дублирования (в batch + при генерации per §3.2.2 step 4) | ✅ |
 | **F-22** | Индекс зрелости подразделения (maturity_index + maturity_level) | ✅ |
 
@@ -50,8 +66,8 @@
 
 | Шаг | Описание | Статус |
 |-----|----------|--------|
-| 1. Retrieval (RAG) | Векторный поиск по ВНД и стратегиям | ✅ |
-| 2. Контекстуализация | Должность + подразделение + цели руководителя | ✅ |
+| 1. Retrieval (RAG) | Гибридный поиск: n-gram cosine × 0.40 + BM25 × 0.35 + keyword × 0.15 + doc_type × 0.10 | ✅ |
+| 2. Контекстуализация | Должность + подразделение + KPI + проекты + цели руководителя | ✅ |
 | 3. Генерация (LLM) | GPT-4o-mini + автоматическая переформулировка при < 0.7 | ✅ |
 | 4. Верификация | Проверка дублирования с существующими целями сотрудника | ✅ |
 
@@ -66,8 +82,10 @@
 | Пакетная оценка за квартал | ✅ Да | ✅ |
 | Дашборд качества по подразделениям | ✅ Да | ✅ |
 | Каскадирование целей от руководителя | ⭕ Опционально | ✅ |
+| Alert Manager (уведомления) | ⭕ Опционально | ✅ |
+| История изменений целей (F-15) | ⭕ Опционально | ✅ |
 
-### Модель данных (§2.1, §2.2)
+### Модель данных (§2.1, §2.2) — 13 таблиц, 30 Pydantic-моделей
 
 **Goal** (соответствие ТЗ §2.1):
 ```
@@ -83,24 +101,24 @@ title, content, valid_from, valid_to, department_scope, keywords, version
 
 ### Данные для хакатона (§4.2)
 
-Система готова принять `.sql` дамп от организаторов (PostgreSQL 17+ custom format).
-Все 13 таблиц из §4.2 поддерживаются:
+Система поддерживает все **13 таблиц** из §4.2 + синтетический генератор **47,857 записей** для тестирования:
 
-| Таблица | Записей (ТЗ) | Описание |
-|---------|-------------|----------|
-| departments | 8 | Подразделения |
-| positions | 25 | Должности и грейды |
-| employees | 450 | Сотрудники с иерархией |
-| documents | 160 | ВНД, стратегии, KPI-фреймворки |
-| goals | 9 000 | Цели сотрудников за все периоды |
-| projects | 34 | Проекты компании |
-| systems | 10 | ИТ-системы |
-| project_systems | 65 | Связь проект↔система |
-| employee_projects | 886 | Связь сотрудник↔проект (роль, %) |
-| goal_events | 30 789 | Журнал изменений целей (F-15) |
-| goal_reviews | 4 305 | Рецензии руководителей на цели |
-| kpi_catalog | 13 | Каталог KPI (название, единица) |
-| kpi_timeseries | 2 112 | Временные ряды KPI по подразделениям |
+| Таблица | Записей (demo) | Записей (synthetic) | Описание |
+|---------|---------------|---------------------|----------|
+| departments | 8 | 8 | Подразделения |
+| positions | 8 | 25 | Должности и грейды |
+| employees | 6 | 450 | Сотрудники с иерархией |
+| documents | 10 | 160 | ВНД, стратегии, KPI-фреймворки |
+| goals | 18 | 9,000 | Цели сотрудников за все периоды |
+| projects | — | 34 | Проекты компании |
+| systems | — | 10 | ИТ-системы |
+| project_systems | — | 65 | Связь проект↔система |
+| employee_projects | — | 886 | Связь сотрудник↔проект (роль, %) |
+| goal_events | — | 30,789 | Журнал изменений целей (F-15) |
+| goal_reviews | — | 4,305 | Рецензии руководителей на цели |
+| kpi_catalog | — | 13 | Каталог KPI (название, единица) |
+| kpi_timeseries | — | 2,112 | Временные ряды KPI по подразделениям |
+| **ИТОГО** | **50** | **47,857** | |
 
 **Загрузка дампа:**
 ```bash
@@ -111,24 +129,20 @@ docker compose up --build
 # Вариант 2: psql
 psql -U postgres -d hr_goal_ai -f hackathon_dump.sql
 
-# Вариант 3: Python-скрипт
-python scripts/load_dump.py hackathon_dump.sql
-
-# Проверка загрузки
-python scripts/load_dump.py --verify-only
-# Или через API: GET /api/v1/data/stats
+# Проверка загрузки через API:
+# GET /api/v1/data/stats — покажет количество записей по каждой из 13 таблиц
 ```
 
 ### Технический стек (§4.1)
 
 | Требование ТЗ | Наша реализация | Обоснование |
 |----------------|----------------|-------------|
-| PostgreSQL | ✅ PostgreSQL 17 | Production-ready через Docker Compose |
-| ChromaDB / Qdrant / FAISS | ✅ Qdrant | Qdrant — лучший выбор для production: REST API + Docker |
-| Python, HuggingFace | ✅ Python + OpenAI GPT-4o-mini | GPT-4o-mini: выше качество генерации, чем HuggingFace локальные модели |
-| sentence-transformers / OpenAI embeddings | ✅ TF-IDF-like (demo) / Qdrant (prod) | Demo: встроенный векторный поиск. Prod: Qdrant с embeddings |
-| FastAPI / Flask | ✅ FastAPI | Async, автодокументация (Swagger), type-safe |
-| React / Vue.js | ✅ React 18 + TypeScript + Vite | SPA с 3 страницами: Dashboard, Evaluate, Generate |
+| PostgreSQL | ✅ PostgreSQL 17 | Production-ready, 13 нормализованных таблиц, Docker Compose |
+| ChromaDB / Qdrant / FAISS | ✅ Qdrant + Memory fallback | Qdrant (production): REST API + Docker. Memory (demo): zero-config |
+| Python, HuggingFace | ✅ Python + OpenAI GPT-4o-mini | GPT-4o-mini: лучшее соотношение цена/качество для русского языка |
+| Embeddings | ✅ N-gram feature hashing (512d) + BM25 hybrid | Zero-dependency, ~1000× быстрее BERT, offline-ready |
+| FastAPI / Flask | ✅ FastAPI + Pydantic v2 | Async, автодокументация Swagger, 30 типизированных моделей |
+| React / Vue.js | ✅ React 18 + TypeScript + Vite + Recharts | SPA: 5 страниц, 7 компонентов, интерактивные графики |
 
 ---
 
@@ -137,46 +151,52 @@ python scripts/load_dump.py --verify-only
 ### Общая схема (§5)
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│                     React SPA (Vite + TS)                       │
-│  ┌──────────┐  ┌──────────────┐  ┌──────────────┐              │
-│  │Dashboard │  │  Evaluate    │  │  Generate     │              │
-│  │  Page    │  │   Page       │  │   Page        │              │
-│  └────┬─────┘  └──────┬───────┘  └──────┬────────┘              │
-│       └───────────────┼──────────────────┘                      │
-│                       │ HTTP REST API                           │
-└───────────────────────┼─────────────────────────────────────────┘
-                        │
-┌───────────────────────┼─────────────────────────────────────────┐
-│                 FastAPI Backend                                  │
-│  ┌────────────────────┴──────────────────────────────────────┐  │
-│  │                   API Router (routes.py)                   │  │
+┌──────────────────────────────────────────────────────────────────┐
+│                  React 18 + TypeScript + Vite                    │
+│  ┌──────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ ┌────────┐ │
+│  │Dashboard │ │ Evaluate │ │ Generate │ │ Cascade │ │Maturity│ │
+│  └────┬─────┘ └────┬─────┘ └────┬─────┘ └────┬────┘ └───┬────┘ │
+│       └─────────────┼───────────┼─────────────┘          │      │
+│                     │  HTTP REST API (Vite proxy)        │      │
+└─────────────────────┼───────────┼────────────────────────┘──────┘
+                      │           │
+┌─────────────────────┼───────────┼───────────────────────────────┐
+│                FastAPI Backend (17 endpoints)                    │
+│  ┌──────────────────┴───────────┴────────────────────────────┐  │
+│  │                API Router (routes.py, 179 lines)          │  │
 │  │  /health  /evaluate  /generate  /rewrite  /batch          │  │
 │  │  /cascade /dashboard /maturity /ingest /context            │  │
-│  │  /goals/{id}/history  /data/stats                         │  │
-│  └────────────────────┬──────────────────────────────────────┘  │
-│  ┌────────────────────┴──────────────────────────────────────┐  │
-│  │              GoalEngine (engine.py, 845+ lines)           │  │
+│  │  /history  /data/stats  /notifications  /departments       │  │
+│  └──────────────────┬────────────────────────────────────────┘  │
+│  ┌──────────────────┴────────────────────────────────────────┐  │
+│  │             GoalEngine (engine.py, 989 lines)             │  │
 │  │  ┌──────────────┐  ┌──────────────┐  ┌────────────────┐  │  │
 │  │  │ SMART Rules  │  │  LLM Service │  │  RAG / Vector  │  │  │
-│  │  │ (rules.py)   │  │  (llm.py)    │  │  Search        │  │  │
-│  │  │ Deterministic│  │  GPT-4o-mini │  │  ВНД/Strategy  │  │  │
+│  │  │ (rules.py)   │  │  (llm.py)    │  │  Hybrid Search │  │  │
+│  │  │ 313 lines    │  │  GPT-4o-mini │  │  N-gram + BM25 │  │  │
+│  │  │ Deterministic│  │  210 lines   │  │  188 lines     │  │  │
 │  │  └──────────────┘  └──────────────┘  └────────────────┘  │  │
 │  └───────────────────────────────────────────────────────────┘  │
-│  ┌────────────────────┐  ┌─────────────────────────────────┐   │
-│  │   Storage Layer    │  │      Vector Store Layer          │   │
-│  │  Memory / Postgres │  │    Memory / Qdrant              │   │
-│  └────────────────────┘  └─────────────────────────────────┘   │
+│  ┌──────────────────────┐  ┌───────────────────────────────┐   │
+│  │   Storage Layer      │  │    Vector Store Layer          │   │
+│  │  Memory (503 lines)  │  │  Memory (188 lines) — demo    │   │
+│  │  Postgres (569 lines)│  │  Qdrant (175 lines) — prod    │   │
+│  └──────────────────────┘  └───────────────────────────────┘   │
 └─────────────────────────────────────────────────────────────────┘
 ```
 
-### Потоки данных (§5.1)
+### Dual-mode архитектура
 
-| Поток | Описание |
-|-------|----------|
-| **Оценка** | Цель → Quality Evaluator → SMART-оценка + рекомендации + OKR → UI |
-| **Генерация** | Профиль сотрудника → RAG-поиск ВНД → LLM-генерация → SMART-проверка → дедупликация → Список целей |
-| **Аналитика** | Все оценки → Агрегация → Дашборд по подразделениям и кварталам |
+Система работает в двух режимах **без изменения кода**:
+
+| | **Demo mode** (по умолчанию) | **Production mode** |
+|--|-----|------|
+| Storage | In-memory (8 отделов, 6 сотрудников, 18 целей) | PostgreSQL 17 (13 таблиц) |
+| Vector | N-gram hashing + BM25 (zero-config) | Qdrant (Docker) |
+| LLM | Rule-based fallback (offline) | GPT-4o-mini (OpenAI API) |
+| Запуск | `uvicorn app.main:app` | `docker compose up` |
+
+Переключение через переменные окружения — ни одна строка кода не меняется.
 
 ### Гибридный подход (Rule-based + LLM)
 
@@ -194,7 +214,7 @@ python scripts/load_dump.py --verify-only
     │ • Specificity      │      │ • OKR Mapping        │
     │ • Measurability    │      │ • Goal Rewriting     │
     │ • Achievability    │      │ • Goal Generation    │
-    │ • Relevance        │      │                      │
+    │ • Relevance + RAG  │      │                      │
     │ • Time-bound       │      │  Graceful Degradation│
     │                    │      │  (no key → fallback) │
     └─────────┬──────────┘      └───────────┬──────────┘
@@ -214,12 +234,12 @@ python scripts/load_dump.py --verify-only
 
 | Критерий | Вес | Наша реализация |
 |----------|-----|-----------------|
-| **Качество оценки целей** | 25% | SMART-scoring (rules.py: 300+ строк), стратегическая связка, тип цели, OKR-маппинг, 100% accuracy на 100 тестовых целей |
-| **Качество генерации целей** | 25% | RAG-пайплайн + GPT-4o-mini, привязка к ВНД/стратегии, авто-переформулировка при score < 0.7, каскадирование от руководителя |
-| **UX интерфейса** | 15% | React 18 SPA: Dashboard, Evaluate, Generate — наглядная обратная связь по каждому критерию |
-| **Качество RAG-пайплайна** | 15% | Векторный поиск (TF-IDF + cosine + keyword overlap), chunk-based retrieval, привязка к конкретному фрагменту ВНД |
-| **Архитектура и API** | 10% | FastAPI + Swagger, чистый код, DI-контейнер, абстракции Storage/Vector, Docker Compose |
-| **Аналитика и дашборд** | 10% | Дашборд руководителя: сводные KPI, сравнительные bar-чарты (SMART + стратег. доля), pie-chart зрелости, рейтинг-таблица подразделений с цветовой кодировкой, индекс зрелости (F-22), статистика данных §4.2, dropdown-селекторы вместо ID |
+| **Качество оценки целей** | 25% | SMART-scoring (rules.py: 313 строк), RAG-контекст, OKR-маппинг, историческая достижимость (F-20), **99% accuracy** на 100 тестовых целей |
+| **Качество генерации целей** | 25% | RAG hybrid search + GPT-4o-mini, привязка к ВНД/стратегии, auto-rewrite при score < 0.7, каскадирование (F-14) |
+| **UX интерфейса** | 15% | React 18 SPA: 5 страниц (Dashboard, Evaluate, Generate, Cascade, Maturity), Recharts графики, Alert Manager |
+| **Качество RAG-пайплайна** | 15% | Sentence-aware chunking (300/50), N-gram feature hashing (512d), BM25, hybrid scoring formula |
+| **Архитектура и API** | 10% | FastAPI + Swagger, 17 эндпоинтов, DI-контейнер, 30 Pydantic-моделей, Docker Compose, dual-mode |
+| **Аналитика и дашборд** | 10% | Grouped bar chart, maturity pie chart, ranking table, индекс зрелости (F-22), Alert Manager (6 типов уведомлений) |
 
 ---
 
@@ -228,25 +248,32 @@ python scripts/load_dump.py --verify-only
 ### Быстрый старт (3 минуты)
 
 ```bash
-# 1. Установить зависимости
+# 1. Клонируйте репозиторий
+git clone https://github.com/TriplelllK/GoalCraft_AI.git
+cd GoalCraft_AI
+
+# 2. Создайте и активируйте виртуальное окружение
+python -m venv .venv
+.venv\Scripts\activate          # Windows
+source .venv/bin/activate       # Linux/Mac
+
+# 3. Установите зависимости
 pip install -r requirements.txt
 
-# 2. (Опционально) Установить ключ OpenAI для LLM
-# Windows PowerShell:
-$env:OPENAI_API_KEY = "sk-proj-ваш-ключ"
-# Linux/Mac:
-export OPENAI_API_KEY="sk-proj-ваш-ключ"
+# 4. (Опционально) Подключите LLM
+$env:OPENAI_API_KEY = "sk-proj-ваш-ключ"  # Windows PowerShell
+export OPENAI_API_KEY="sk-proj-ваш-ключ"  # Linux/Mac
 
-# 3. Запустить сервер
+# 5. Запустите бэкенд
 cd backend_project
 uvicorn app.main:app --host 0.0.0.0 --port 8899
 
-# 4. Открыть Swagger UI в браузере
+# 6. Откройте Swagger UI
 # http://localhost:8899/docs
 ```
 
 > ℹ️ **Без ключа OpenAI** проект полностью работоспособен — используется rule-based fallback (graceful degradation).
-> **С ключом** — генерация и переписывание целей через GPT-4o-mini, OKR-маппинг через LLM.
+> **С ключом** — генерация и переписывание через GPT-4o-mini, OKR-маппинг через LLM.
 
 ### Пошаговая проверка через Swagger UI
 
@@ -334,9 +361,15 @@ uvicorn app.main:app --host 0.0.0.0 --port 8899
 
 Эндпоинт: **GET /api/v1/dashboard/departments/dep_hr/maturity?quarter=Q2&year=2026**
 
-**Ожидаемый результат:** `maturity_index`, `maturity_level`, распределение целей, рекомендации для руководителя.
+**Ожидаемый результат:** `maturity_index`, `maturity_level`, распределение целей, рекомендации.
 
-#### 7️⃣ Загрузка собственных документов (ВНД)
+#### 7️⃣ Alert Manager
+
+Эндпоинт: **GET /api/v1/notifications?quarter=Q2&year=2026**
+
+**Ожидаемый результат:** Список уведомлений: critical (< 3 целей, вес ≠ 100%), warning (нет целей, дубликаты).
+
+#### 8️⃣ Загрузка собственных документов (ВНД)
 
 Эндпоинт: **POST /api/v1/documents/ingest**
 
@@ -347,7 +380,7 @@ uvicorn app.main:app --host 0.0.0.0 --port 8899
       "doc_id": "MY-DOC-01",
       "doc_type": "vnd",
       "title": "ВНД по охране труда",
-      "content": "Обеспечить проведение инструктажей по ТБ для 100% сотрудников. Снизить количество инцидентов на производстве до нуля. Ежеквартальный аудит условий труда обязателен.",
+      "content": "Обеспечить проведение инструктажей по ТБ для 100% сотрудников. Снизить количество инцидентов на производстве до нуля.",
       "owner_department_id": "dep_ops",
       "department_scope": ["dep_ops", "dep_hr"],
       "keywords": ["охрана труда", "ТБ", "инструктаж", "инциденты"]
@@ -362,12 +395,12 @@ uvicorn app.main:app --host 0.0.0.0 --port 8899
 
 | ID | Имя | Должность | Подразделение |
 |----|-----|-----------|---------------|
-| `emp_mgr` | Aidos S. | Production Manager | HR / Production Block |
-| `emp_1` | Aigerim S. | HR Business Partner | HR / Production Block |
-| `emp_2` | Dana M. | L&D Specialist | Learning & Development |
-| `emp_3` | Marat K. | C&B Specialist | Compensation & Benefits |
-| `emp_4` | Saltanat B. | Recruiter | Recruitment & Staffing |
-| `emp_5` | Nurzhan T. | HR Analyst | HR / Production Block |
+| `emp_mgr` | Aidos S. | Production Manager (G12) | HR / Production Block |
+| `emp_1` | Aigerim S. | HR Business Partner (G10) | HR / Production Block |
+| `emp_2` | Dana M. | L&D Specialist (G9) | Learning & Development |
+| `emp_3` | Marat K. | C&B Specialist (G9) | Compensation & Benefits |
+| `emp_4` | Saltanat B. | Recruiter (G8) | Recruitment & Staffing |
+| `emp_5` | Nurzhan T. | HR Analyst (G9) | HR / Production Block |
 
 ### Доступные подразделения (8 шт.)
 
@@ -382,47 +415,58 @@ uvicorn app.main:app --host 0.0.0.0 --port 8899
 | `dep_it` | IT & Digital |
 | `dep_legal` | Legal & Compliance |
 
-### Файл с готовыми тестовыми сценариями
-
-В файле **`qa/customer_test_scenarios.json`** подготовлены **14 готовых сценариев** для проверки всех эндпоинтов. Можно копировать JSON-запросы прямо в Swagger UI.
-
-### Запуск автоматических тестов
-
-```bash
-cd backend_project
-
-# Контрактные тесты (10 тестов)
-python qa/run_api_contract_tests.py
-
-# Быстрый интеграционный тест (15 эндпоинтов)
-python qa/quick_test.py
-
-# Диагностический тест (100 целей: 50 bad + 50 good)
-python qa/run_diagnostic_50.py
-
-# LLM интеграционные тесты (требуется OPENAI_API_KEY)
-python qa/test_llm_integration.py
-```
-
 ---
 
 ## 📊 Результаты тестирования
 
-### Диагностический тест (100 синтетических целей)
+### 7 тестовых сьютов — 251 тест, 99.6% pass rate
+
+| Тест-сьют | Тестов | Результат | Описание |
+|-----------|--------|-----------|----------|
+| **Contract Tests** | 15 | ✅ **15/15** | Схемы ответов, типы полей, диапазоны значений |
+| **Comprehensive QA** | 61 | ✅ **61/61** | Schema + API + Performance + Edge Cases + Data Integrity + Dashboard |
+| **Frontend Functional** | 34 | ✅ **34/34** | Все API-контракты фронтенда, build-артефакты |
+| **Smoke Endpoints** | 17 | ✅ **17/17** | 17 эндпоинтов, status 200 + ключевые поля |
+| **Quick Tests** | 16 | ✅ **16/16** | Все эндпоинтов быстрой проверкой |
+| **Demo Tests** | 8 | ✅ **8/8** | Сценарии демо-режима |
+| **Diagnostic (accuracy)** | 100 | ✅ **99/100** | 50 плохих + 50 хороших целей |
+| **ИТОГО** | **251** | **250/251** | **99.6% pass rate** |
+
+### Диагностика точности — 100 целей
 
 | Метрика | Значение |
 |---------|----------|
-| **Общая точность** | **100.0%** |
+| **Общая точность** | **99%** (99/100) |
 | Плохие цели правильно определены | 50/50 (100%) |
-| Хорошие цели правильно определены | 50/50 (100%) |
-| Средний score плохих целей | 0.408 |
-| Средний score хороших целей | 0.860 |
-| Разделение (gap) | **0.452** |
-| False Positives / Negatives | 0 / 0 |
+| Хорошие цели правильно определены | 49/50 (98%) |
+| Средний score плохих целей | 0.409 |
+| Средний score хороших целей | 0.863 |
+| Разделение (gap) | **0.454** |
+| False Positives | 1 (пограничный случай, score=0.60) |
 
-### API контрактные тесты: **10/10** ✅
+### Тестирование на синтетических данных (§4.2)
 
-### LLM интеграционные тесты: **23/23** ✅
+Comprehensive QA загружает **47,857 синтетических записей** (13 таблиц) и проверяет:
+- Корректность API-контрактов на больших объёмах данных
+- Performance: health < 100ms, evaluate < 2s, generate < 5s
+- Edge cases: пустые подразделения, несуществующие сотрудники
+- Data integrity: целостность связей между таблицами
+
+### Запуск тестов
+
+```bash
+cd backend_project
+
+# Убедитесь что бэкенд запущен на порту 8899
+
+python qa/run_api_contract_tests.py     # 15/15 контрактных тестов
+python qa/run_comprehensive_tests.py    # 61/61 комплексных (+ 47K синтетических записей)
+python qa/smoke_endpoints.py            # 17/17 smoke тест всех эндпоинтов
+python qa/run_diagnostic_50.py          # 99/100 accuracy (100 целей)
+python qa/run_frontend_tests.py         # 34/34 frontend тестов
+python qa/quick_test.py                 # 16/16 быстрых тестов
+python qa/demo_test.py                  # 8/8 демо тестов
+```
 
 ---
 
@@ -508,43 +552,69 @@ python qa/test_llm_integration.py
 ### Требования
 
 - **Python** 3.11+
-- **Node.js** 18+ (для frontend)
-- **Docker** и **Docker Compose** (опционально)
+- **Node.js** 18+ (для frontend, опционально)
+- **Docker** и **Docker Compose** (для production, опционально)
 
-### Backend — быстрый старт
+### Вариант 1: Локальный запуск (Demo — без Docker, без БД)
 
 ```bash
+# 1. Клонируйте репозиторий
+git clone https://github.com/TriplelllK/GoalCraft_AI.git
+cd GoalCraft_AI
+
+# 2. Создайте виртуальное окружение
 python -m venv .venv
-.venv\Scripts\activate          # Windows
-source .venv/bin/activate       # Linux/Mac
+
+# Windows:
+.venv\Scripts\activate
+# Linux/macOS:
+source .venv/bin/activate
+
+# 3. Установите зависимости
 pip install -r requirements.txt
+
+# 4. (Опционально) Подключите LLM
+# Windows PowerShell:
+$env:OPENAI_API_KEY = "sk-proj-ваш-ключ"
+# Linux/macOS:
+export OPENAI_API_KEY="sk-proj-ваш-ключ"
+
+# 5. Запустите бэкенд
 cd backend_project
-uvicorn app.main:app --host 0.0.0.0 --port 8899 --reload
+uvicorn app.main:app --host 0.0.0.0 --port 8899
+
+# 6. Проверьте работу
+# Swagger UI: http://localhost:8899/docs
+# Health:     http://localhost:8899/health
 ```
 
-Swagger UI: **http://localhost:8899/docs**
-
-### С LLM (OpenAI)
+### Вариант 2: Docker Compose (Production — PostgreSQL + Qdrant)
 
 ```bash
-$env:OPENAI_API_KEY = "sk-proj-..."     # Windows
-export OPENAI_API_KEY="sk-proj-..."     # Linux/Mac
-uvicorn app.main:app --host 0.0.0.0 --port 8899 --reload
-```
+cd GoalCraft_AI/backend_project
 
-### Production (Docker Compose)
+# 1. Настройте переменные окружения
+cp .env.example .env
+# Отредактируйте .env — укажите OPENAI_API_KEY (опционально)
 
-```bash
-cd backend_project
-cp .env.example .env    # заполнить значения
-docker-compose up -d
+# 2. (Опционально) SQL-дамп организатора
+# mkdir -p data && cp путь/к/dump.sql data/
+
+# 3. Запустите все 3 сервиса
+docker compose up --build -d
+
+# 4. Проверьте
+# API:     http://localhost:8000/docs
+# Qdrant:  http://localhost:6333/dashboard
 ```
 
 ### Frontend
 
 ```bash
 cd backend_project/frontend
-npm install && npm run dev    # http://localhost:5173
+npm install
+npm run dev
+# http://localhost:5173
 ```
 
 ---
@@ -555,52 +625,91 @@ npm install && npm run dev    # http://localhost:5173
 
 | Переменная | По умолчанию | Описание |
 |------------|--------------|----------|
-| `STORAGE_BACKEND` | memory | `memory` / `postgres` |
-| `VECTOR_BACKEND` | memory | `memory` / `qdrant` |
-| `OPENAI_API_KEY` | — | API-ключ OpenAI (опционально) |
-| `OPENAI_MODEL` | gpt-4o-mini | Модель OpenAI |
-| `POSTGRES_HOST` | localhost | Хост PostgreSQL |
-| `QDRANT_URL` | — | URL Qdrant |
+| `STORAGE_BACKEND` | `memory` | `memory` (demo) / `postgres` (production) |
+| `POSTGRES_HOST` | `localhost` | Хост PostgreSQL (авто-определяет postgres mode) |
+| `POSTGRES_PORT` | `5432` | Порт PostgreSQL |
+| `POSTGRES_DB` | `hr_goal_ai` | Имя базы данных |
+| `POSTGRES_USER` | `postgres` | Пользователь БД |
+| `POSTGRES_PASSWORD` | — | Пароль БД |
+| `VECTOR_BACKEND` | `memory` | `memory` (demo) / `qdrant` (production) |
+| `QDRANT_URL` | `http://localhost:6333` | URL Qdrant |
+| `OPENAI_API_KEY` | — | API-ключ OpenAI (опционально, graceful degradation) |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Модель LLM |
+| `CORS_ORIGINS` | `*` | CORS-политика |
 
 ---
 
 ## 📁 Структура проекта
 
 ```
-goalcraft-ai/
-├── requirements.txt              # Python-зависимости
-├── README.md                     # Документация
-├── .env.example                  # Шаблон конфигурации (§10)
-├── data/                         # SQL-дамп организаторов (§4.2)
-│   └── README.md                 # Инструкция по загрузке дампа
-├── scripts/
-│   └── load_dump.py              # Загрузчик SQL-дампа (auto-verify)
+GoalCraft_AI/
+├── requirements.txt                    # Python-зависимости
+├── README.md                           # Документация (этот файл)
+├── .env.example                        # Шаблон конфигурации
+├── .gitignore                          # Git ignore rules
 ├── backend_project/
-│   ├── .env.example              # Шаблон конфигурации
-│   ├── docker-compose.yml        # Docker orchestration (+ dump auto-import)
+│   ├── README.md                       # Техническая презентация (алгоритмы, формулы, RAG)
+│   ├── Dockerfile                      # Docker-образ приложения
+│   ├── docker-compose.yml              # 3 сервиса: api + PostgreSQL 17 + Qdrant
+│   ├── .env.example                    # Переменные окружения
 │   ├── app/
-│   │   ├── main.py               # FastAPI entry point
-│   │   ├── container.py          # DI container
-│   │   ├── api/routes.py         # 13 REST endpoints
-│   │   ├── core/config.py        # Environment configuration
-│   │   ├── models/schemas.py     # Pydantic models (все 13 таблиц §4.2)
+│   │   ├── main.py                     # FastAPI entry point
+│   │   ├── container.py                # DI-контейнер (Storage → Vector → Engine)
+│   │   ├── api/
+│   │   │   └── routes.py              # 17 REST-эндпоинтов (179 строк)
+│   │   ├── core/
+│   │   │   └── config.py             # Конфигурация из env vars (71 строка)
+│   │   ├── models/
+│   │   │   └── schemas.py            # 30 Pydantic-моделей (297 строк)
 │   │   ├── services/
-│   │   │   ├── engine.py         # GoalEngine (870+ lines)
-│   │   │   ├── rules.py          # SMART rules (300+ lines)
-│   │   │   └── llm.py            # OpenAI LLM (244 lines)
+│   │   │   ├── engine.py             # GoalEngine — вся бизнес-логика (989 строк)
+│   │   │   ├── rules.py              # SMART-правила, детерминированные (313 строк)
+│   │   │   └── llm.py                # LLM-сервис, GPT-4o-mini (210 строк)
 │   │   ├── storage/
-│   │   │   ├── memory.py         # Demo: 8 depts, 6 employees, 10 docs, 18 goals
-│   │   │   └── postgres.py       # PostgreSQL store (13 таблиц §4.2)
+│   │   │   ├── memory.py             # In-memory хранилище + seed data (503 строки)
+│   │   │   └── postgres.py           # PostgreSQL адаптер, 13 таблиц (569 строк)
 │   │   └── vector/
-│   │       ├── memory_vector.py  # In-memory vector search
-│   │       └── qdrant_vector.py  # Qdrant vector store
-│   ├── frontend/src/             # React 18 + TypeScript + Vite
+│   │       ├── memory_vector.py      # N-gram hashing + BM25 + hybrid (188 строк)
+│   │       └── qdrant_vector.py      # Qdrant production vector store (175 строк)
+│   ├── frontend/
+│   │   ├── package.json              # React 18 + Vite + Recharts
+│   │   ├── tsconfig.json             # TypeScript config
+│   │   ├── vite.config.ts            # Vite + proxy на backend
+│   │   └── src/
+│   │       ├── api.ts                # API-клиент, 16 вызовов (65 строк)
+│   │       ├── types.ts              # 27 TypeScript-интерфейсов (261 строка)
+│   │       ├── App.tsx               # Router: 5 маршрутов
+│   │       └── pages/
+│   │           ├── DashboardPage.tsx  # Дашборд + графики (277 строк)
+│   │           ├── EvaluatePage.tsx   # Оценка + batch (205 строк)
+│   │           ├── GeneratePage.tsx   # Генерация целей (105 строк)
+│   │           ├── CascadePage.tsx    # Каскадирование (137 строк)
+│   │           └── MaturityPage.tsx   # Зрелость (163 строки)
 │   └── qa/
-│       ├── customer_test_scenarios.json  # 14 тестовых сценариев
-│       ├── quick_test.py                 # Быстрый тест (15 эндпоинтов)
-│       ├── run_api_contract_tests.py     # 10 контрактных тестов
-│       └── fixtures/                     # 100 тестовых целей
+│       ├── run_api_contract_tests.py  # 15 контрактных тестов
+│       ├── run_comprehensive_tests.py # 61 тест (§4.2, синтетика 47K записей)
+│       ├── run_frontend_tests.py      # 34 frontend-теста
+│       ├── run_diagnostic_50.py       # 100 целей, accuracy 99%
+│       ├── smoke_endpoints.py         # 17 эндпоинтов smoke
+│       ├── quick_test.py              # 16 быстрых тестов
+│       ├── demo_test.py               # 8 демо-тестов
+│       ├── generate_synthetic_db.py   # Генератор 47K записей (666 строк)
+│       └── fixtures/                  # Тестовые фикстуры
 ```
+
+### Метрики проекта
+
+| Метрика | Значение |
+|---------|----------|
+| Python LOC | **6,757** (30 файлов) |
+| TypeScript/TSX LOC | **1,518** (18 файлов) |
+| **Всего LOC** | **8,275** (48 файлов) |
+| Pydantic-моделей | **30** |
+| REST API эндпоинтов | **17** |
+| Таблиц БД (§4.2) | **13** |
+| Тестов | **251** |
+| Pass rate | **99.6%** |
+| SMART accuracy | **99%** (100 целей) |
 
 ---
 

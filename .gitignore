@@ -1,3 +1,5 @@
+# ── GoalCraft AI — .gitignore ─────────────────────────────────────
+
 # ── Secrets & API keys ────────────────────────────────────────────
 llm_api_key.txt
 *.key
@@ -11,6 +13,8 @@ llm_api_key.txt
 *.docx
 *.pptx
 *.xlsx
+*.zip
+*.tar.gz
 
 # ── Python ───────────────────────────────────────────────────────
 __pycache__/
@@ -26,6 +30,8 @@ build/
 venv/
 env/
 .Python
+*.whl
+pip-log.txt
 
 # ── Node / Frontend ─────────────────────────────────────────────
 **/node_modules/
@@ -42,6 +48,7 @@ package-lock.json
 *~
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # ── Docker ───────────────────────────────────────────────────────
 *.log
@@ -52,3 +59,9 @@ docker-compose.override.yml
 **/qa/test_report.json
 **/qa/fixtures/synthetic_dump.json
 **/qa/comprehensive_test_report.json
+**/qa/frontend_test_report.json
+
+# ── OS / Temp ────────────────────────────────────────────────────
+*.tmp
+*.bak
+*.orig
