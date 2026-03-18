@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import logging
 import math
 import time
 from dataclasses import dataclass
@@ -8,9 +9,12 @@ from typing import Any, Optional
 
 import requests
 
+from app.core.config import settings
 from app.models.schemas import Document
 from app.services.rules import chunk_text, overlap_ratio, tokenize
 from app.vector.memory_vector import ChunkRecord, ScoredChunk
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass
@@ -21,10 +25,10 @@ class SearchResult(ChunkRecord):
 class QdrantVectorStore:
     """Qdrant integration via REST API.
 
-    Uses a deterministic lightweight hashing embedder so the service can be indexed
-    without heavyweight ML dependencies. This keeps the backend runnable while still
-    providing a real vector database integration. You can later swap `_embed` with
-    BGE-M3 embeddings without changing the API surface.
+    Embedding strategy (priority order):
+      1. OpenAI text-embedding-3-small with dimensions=256 — semantic, multilingual,
+         same vector size as hash-based so no collection changes needed.
+      2. Hash-based fallback — deterministic, zero dependencies.
     """
 
     def __init__(self, url: str, api_key: str, collection: str, vector_size: int = 256, timeout: float = 10.0) -> None:
@@ -37,6 +41,17 @@ class QdrantVectorStore:
         self.timeout = timeout
         self._session = requests.Session()
         self._chunks_by_id: dict[str, SearchResult] = {}
+
+        # ── OpenAI embeddings (when API key available) ────────────────
+        self._openai_client = None
+        if getattr(settings, "openai_api_key", None):
+            try:
+                from openai import OpenAI
+                self._openai_client = OpenAI(api_key=settings.openai_api_key)
+                logger.info("Qdrant: using OpenAI text-embedding-3-small (dim=%d)", self.vector_size)
+            except Exception as exc:
+                logger.warning("OpenAI embeddings unavailable, falling back to hash: %s", exc)
+
         self.ensure_collection()
 
     @property
@@ -84,15 +99,16 @@ class QdrantVectorStore:
                     json=payload,
                     timeout=self.timeout,
                 )
-                if response.status_code in {200, 201}:
-                    return
+                if response.status_code in {200, 201, 409}:
+                    return  # 409 = collection already exists — OK
                 response.raise_for_status()
             except Exception as exc:  # pragma: no cover - external service timing
                 last_error = exc
                 time.sleep(delay)
         raise RuntimeError(f"Failed to create/connect Qdrant collection {self.collection}: {last_error}")
 
-    def _embed(self, text: str) -> list[float]:
+    def _embed_hash(self, text: str) -> list[float]:
+        """Deterministic hash-based embedding (fallback, no dependencies)."""
         vec = [0.0] * self.vector_size
         tokens = tokenize(text)
         if not tokens:
@@ -105,9 +121,42 @@ class QdrantVectorStore:
         norm = math.sqrt(sum(x * x for x in vec)) or 1.0
         return [round(x / norm, 8) for x in vec]
 
+    def _embed(self, text: str) -> list[float]:
+        """Embed a single text. Uses OpenAI if available, else hash-based."""
+        if self._openai_client is not None:
+            try:
+                response = self._openai_client.embeddings.create(
+                    input=text[:2000],
+                    model="text-embedding-3-small",
+                    dimensions=self.vector_size,
+                )
+                return response.data[0].embedding
+            except Exception as exc:
+                logger.warning("OpenAI embed failed, falling back to hash: %s", exc)
+        return self._embed_hash(text)
+
+    def _embed_batch(self, texts: list[str]) -> list[list[float]]:
+        """Embed multiple texts in one API call (batch for efficiency)."""
+        if self._openai_client is None or not texts:
+            return [self._embed_hash(t) for t in texts]
+        try:
+            truncated = [t[:2000] for t in texts]
+            response = self._openai_client.embeddings.create(
+                input=truncated,
+                model="text-embedding-3-small",
+                dimensions=self.vector_size,
+            )
+            # Sort by index to preserve order
+            return [e.embedding for e in sorted(response.data, key=lambda x: x.index)]
+        except Exception as exc:
+            logger.warning("OpenAI batch embed failed, falling back to hash: %s", exc)
+            return [self._embed_hash(t) for t in texts]
+
     def index_documents(self, documents: list[Document]) -> int:
-        points: list[dict[str, Any]] = []
+        # ── Step 1: collect all chunks and their embed texts ─────────
+        chunk_data: list[tuple[str, dict[str, Any], str]] = []  # (chunk_id, payload, embed_text)
         local_chunks: dict[str, SearchResult] = {}
+
         for doc in documents:
             for idx, part in enumerate(chunk_text(doc.content), start=1):
                 chunk_id = f"{doc.doc_id}::{idx}"
@@ -121,20 +170,36 @@ class QdrantVectorStore:
                     "owner_department_id": doc.owner_department_id,
                     "department_scope": doc.department_scope,
                 }
-                points.append({
-                    "id": int(hashlib.md5(chunk_id.encode('utf-8')).hexdigest()[:12], 16),
-                    "vector": self._embed(f"{doc.title} {part} {' '.join(doc.keywords)}"),
-                    "payload": payload,
-                })
+                embed_text = f"{doc.title} {part} {' '.join(doc.keywords)}"
+                chunk_data.append((chunk_id, payload, embed_text))
                 local_chunks[chunk_id] = SearchResult(**payload, vector_score=0.0)
-        if not points:
+
+        if not chunk_data:
             self._chunks_by_id = {}
             return 0
+
+        # ── Step 2: batch embed (100 per call for API safety) ─────────
+        BATCH_SIZE = 100
+        all_texts = [cd[2] for cd in chunk_data]
+        all_vectors: list[list[float]] = []
+        for i in range(0, len(all_texts), BATCH_SIZE):
+            batch = all_texts[i:i + BATCH_SIZE]
+            all_vectors.extend(self._embed_batch(batch))
+
+        # ── Step 3: build Qdrant points ───────────────────────────────
+        points: list[dict[str, Any]] = []
+        for (chunk_id, payload, _), vector in zip(chunk_data, all_vectors):
+            points.append({
+                "id": int(hashlib.md5(chunk_id.encode('utf-8')).hexdigest()[:12], 16),
+                "vector": vector,
+                "payload": payload,
+            })
+
         response = self._session.put(
             f"{self.url}/collections/{self.collection}/points?wait=true",
             headers=self._headers,
             json={"points": points},
-            timeout=max(self.timeout, 30.0),
+            timeout=max(self.timeout, 60.0),
         )
         response.raise_for_status()
         self._chunks_by_id = local_chunks

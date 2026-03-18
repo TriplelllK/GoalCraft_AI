@@ -223,6 +223,7 @@ class GoalEvaluationResponse(BaseModel):
     source: Optional[SourceEvidence] = None
     achievability: Optional["AchievabilityCheck"] = None
     okr_mapping: Optional[OkrMapping] = None
+    score_explanations: Optional[dict[str, str]] = None
 
 
 class GeneratedGoal(BaseModel):

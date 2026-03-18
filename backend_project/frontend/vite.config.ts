@@ -1,13 +1,17 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 
+// In Docker: VITE_API_URL=http://api:8000, locally: defaults to localhost:8000
+const apiTarget = process.env.VITE_API_URL || 'http://localhost:8080';
+
 export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
+    host: '0.0.0.0',               // Allow access from Docker host
     proxy: {
-      '/api': 'http://localhost:8899',
-      '/health': 'http://localhost:8899',
+      '/api': apiTarget,
+      '/health': apiTarget,
     },
   },
 });

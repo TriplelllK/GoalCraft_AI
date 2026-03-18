@@ -6,7 +6,7 @@ import { SourceBox } from '../components/SourceBox';
 import type { EmployeeContextResponse, GeneratedGoal } from '../types';
 
 export function GeneratePage() {
-  const [employeeId, setEmployeeId] = useState('emp_1');
+  const [employeeId, setEmployeeId] = useState('');
   const [quarter, setQuarter] = useState('Q2');
   const [year, setYear] = useState(2026);
   const [count, setCount] = useState(3);
@@ -17,6 +17,7 @@ export function GeneratePage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!employeeId) return;
     api.employeeContext(employeeId, quarter, year)
       .then(setContext)
       .catch((err) => setError(err.message));
@@ -89,8 +90,8 @@ export function GeneratePage() {
         <h3>Сгенерированные цели</h3>
         {goals.length ? (
           <div className="goal-list">
-            {goals.map((goal) => (
-              <article className="goal-card" key={`${goal.title}-${goal.source.doc_id}`}>
+            {goals.map((goal, idx) => (
+              <article className="goal-card" key={`${goal.title}-${goal.source?.doc_id ?? idx}`}>
                 <div className="goal-topline">
                   <span className="badge">{goal.alignment_level}</span>
                   <span className="badge badge-soft">{goal.goal_type}</span>

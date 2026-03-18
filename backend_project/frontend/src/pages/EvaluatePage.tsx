@@ -8,11 +8,10 @@ import type { BatchEvaluationResponse, EmployeeContextResponse, GoalEvaluationRe
 
 const defaultQuarter = 'Q2';
 const defaultYear = 2026;
-const defaultEmployeeId = 'emp_1';
 const defaultGoal = 'Улучшить процесс обучения сотрудников';
 
 export function EvaluatePage() {
-  const [employeeId, setEmployeeId] = useState(defaultEmployeeId);
+  const [employeeId, setEmployeeId] = useState('');
   const [quarter, setQuarter] = useState(defaultQuarter);
   const [year, setYear] = useState(defaultYear);
   const [goalText, setGoalText] = useState(defaultGoal);
@@ -23,6 +22,7 @@ export function EvaluatePage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!employeeId) return;
     api.employeeContext(employeeId, quarter, year)
       .then(setContext)
       .catch((err) => setError(err.message));

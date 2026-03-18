@@ -6,7 +6,7 @@ import { SourceBox } from '../components/SourceBox';
 import type { CascadeGoalsResponse } from '../types';
 
 export function CascadePage() {
-  const [managerId, setManagerId] = useState('emp_mgr');
+  const [managerId, setManagerId] = useState('');
   const [quarter, setQuarter] = useState('Q2');
   const [year, setYear] = useState(2026);
   const [count, setCount] = useState(3);

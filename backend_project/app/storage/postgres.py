@@ -37,13 +37,20 @@ class PostgresStore:
 
     @staticmethod
     def _import_psycopg():
+        """Import psycopg v3 or fall back to psycopg2."""
         try:
             import psycopg
-        except Exception as exc:
+            return psycopg
+        except ImportError:
+            pass
+        try:
+            import psycopg2 as psycopg
+            return psycopg
+        except ImportError:
             raise RuntimeError(
-                "psycopg is not installed. Install requirements and run again."
-            ) from exc
-        return psycopg
+                "Neither psycopg nor psycopg2 is installed. "
+                "Run: pip install 'psycopg[binary]' or pip install psycopg2-binary"
+            )
 
     def _connect(self):
         return self._psycopg.connect(self.database_url)

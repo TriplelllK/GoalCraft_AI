@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import asyncio
+from functools import partial
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from app.container import AppContainer, container
@@ -69,7 +72,10 @@ async def list_employees(
 @router.post("/api/v1/goals/evaluate", response_model=GoalEvaluationResponse, tags=["goals"])
 async def evaluate_goal(payload: EvaluateGoalRequest, ctx: AppContainer = Depends(get_container)) -> GoalEvaluationResponse:
     try:
-        return ctx.engine.evaluate_goal(payload.employee_id, payload.goal_text, payload.quarter, payload.year)
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, partial(ctx.engine.evaluate_goal, payload.employee_id, payload.goal_text, payload.quarter, payload.year)
+        )
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -77,7 +83,11 @@ async def evaluate_goal(payload: EvaluateGoalRequest, ctx: AppContainer = Depend
 @router.post("/api/v1/goals/rewrite", response_model=dict, tags=["goals"])
 async def rewrite_goal(payload: RewriteGoalRequest, ctx: AppContainer = Depends(get_container)) -> dict:
     try:
-        return {"rewrite": ctx.engine.rewrite_goal(payload.employee_id, payload.goal_text, payload.quarter)}
+        loop = asyncio.get_event_loop()
+        result = await loop.run_in_executor(
+            None, partial(ctx.engine.rewrite_goal, payload.employee_id, payload.goal_text, payload.quarter)
+        )
+        return {"rewrite": result}
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -85,7 +95,10 @@ async def rewrite_goal(payload: RewriteGoalRequest, ctx: AppContainer = Depends(
 @router.post("/api/v1/goals/generate", response_model=list[GeneratedGoal], tags=["goals"])
 async def generate_goals(payload: GenerateGoalsRequest, ctx: AppContainer = Depends(get_container)) -> list[GeneratedGoal]:
     try:
-        return ctx.engine.generate_goals(payload.employee_id, payload.quarter, payload.year, payload.count, payload.focus)
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, partial(ctx.engine.generate_goals, payload.employee_id, payload.quarter, payload.year, payload.count, payload.focus)
+        )
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -93,7 +106,10 @@ async def generate_goals(payload: GenerateGoalsRequest, ctx: AppContainer = Depe
 @router.post("/api/v1/goals/evaluate-batch", tags=["goals"])
 async def evaluate_batch(payload: EvaluateBatchRequest, ctx: AppContainer = Depends(get_container)):
     try:
-        return ctx.engine.evaluate_batch(payload.employee_id, payload.quarter, payload.year, [item.model_dump() for item in payload.goals])
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, partial(ctx.engine.evaluate_batch, payload.employee_id, payload.quarter, payload.year, [item.model_dump() for item in payload.goals])
+        )
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc
 
@@ -144,12 +160,16 @@ async def employee_context(
 @router.post("/api/v1/goals/cascade", response_model=CascadeGoalsResponse, tags=["goals"])
 async def cascade_goals(payload: CascadeGoalsRequest, ctx: AppContainer = Depends(get_container)) -> CascadeGoalsResponse:
     try:
-        return ctx.engine.cascade_goals(
-            payload.manager_id,
-            payload.quarter,
-            payload.year,
-            payload.count_per_employee,
-            payload.focus,
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None, partial(
+                ctx.engine.cascade_goals,
+                payload.manager_id,
+                payload.quarter,
+                payload.year,
+                payload.count_per_employee,
+                payload.focus,
+            )
         )
     except ValueError as exc:
         raise HTTPException(status_code=404, detail=str(exc)) from exc

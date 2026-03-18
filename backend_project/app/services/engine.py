@@ -215,21 +215,38 @@ class GoalEngine:
         wc = goal_word_count(goal_text)
         has_obj = has_specific_object(goal_text)
 
-        # Strategic keywords require minimum substance (>=5 words + specific object)
-        strategic_terms = ["стратег", "цифров", "трансформац", "прозрач"]
+        # Strategic keywords — classic + IT domain (§4.2: all employees are IT engineers)
+        strategic_terms = [
+            "стратег", "цифров", "трансформац", "прозрач",
+            # IT strategic: reliability, security, platform stability
+            "uptime", "sla", "доступност", "отказоустойч",
+            "безопасност", "информационн", "импортозамещен",
+            # Business impact
+            "затрат", "эффектив", "рентабельн", "оптимизац",
+            # Architecture / platform
+            "архитектур", "платформ", "инфраструктур",
+            # Data & analytics
+            "data quality", "качеств данн", "аналитик",
+        ]
         if any(term in text for term in strategic_terms) and wc >= 5 and has_obj:
             return "strategic"
 
-        # Impact keywords (cost, efficiency) — strategic only with measurement
-        if any(term in text for term in ["затрат", "эффектив", "рентабельн"]) and has_measurement(goal_text) and has_obj:
+        # Impact keywords with measurement — always strategic
+        if any(term in text for term in ["снизить", "сократить", "увеличить", "повысить", "улучшить"]) \
+                and has_measurement(goal_text) and has_obj:
             return "strategic"
 
         # Document-based alignment from vector search
-        if chunk and chunk.doc_type in {"strategy", "manager_goal"} and wc >= 5 and has_obj:
+        if chunk and chunk.doc_type in {"strategy", "manager_goal", "kpi_framework"} and wc >= 5 and has_obj:
             return "strategic"
 
-        # Functional — KPI/training/coordination with substance
-        if any(term in text for term in ["kpi", "обуч", "согласован", "компетенц", "performance", "оценк"]):
+        # Functional — KPI/training/coordination/IT operational with substance
+        functional_terms = [
+            "kpi", "okr", "обуч", "согласован", "компетенц", "performance", "оценк",
+            "мониторинг", "инцидент", "тикет", "сервис", "деплой", "релиз",
+            "тестирован", "разработ", "интеграц", "автоматизац",
+        ]
+        if any(term in text for term in functional_terms):
             return "functional"
 
         return "operational"
@@ -390,6 +407,29 @@ class GoalEngine:
             warning=warning,
         )
 
+    def _build_kpi_context(self, department_id: str) -> Optional[str]:
+        """Build a compact KPI context string for LLM prompts from the KPI catalog + timeseries."""
+        try:
+            kpis = self.store.get_kpi_for_department(department_id)
+            if not kpis:
+                return None
+            lines = []
+            for kpi in kpis[:8]:  # max 8 KPIs to keep context concise
+                try:
+                    ts_data = self.store.get_kpi_timeseries(kpi.id, department_id)
+                    if ts_data:
+                        # Latest value
+                        latest = ts_data[-1]
+                        unit = kpi.unit or ""
+                        lines.append(f"- {kpi.name} ({kpi.id}): {round(latest.value, 2)} {unit} (последнее значение {latest.period})")
+                    else:
+                        lines.append(f"- {kpi.name} ({kpi.id}): {kpi.description}")
+                except Exception:
+                    lines.append(f"- {kpi.name}: {kpi.description}")
+            return "KPI подразделения:\n" + "\n".join(lines) if lines else None
+        except Exception:
+            return None
+
     def evaluate_goal(self, employee_id: str, goal_text: str, quarter: str, year: int) -> GoalEvaluationResponse:
         # Check cache
         cache_key = f"{employee_id}|{goal_text}|{quarter}|{year}"
@@ -401,7 +441,7 @@ class GoalEngine:
             raise ValueError("employee not found")
         department = self.store.get_department(employee.department_id)
         position = self.store.get_position(employee.position_id)
-        scored_chunks = self.vector_store.search_scored(goal_text, employee.department_id, top_k=1)
+        scored_chunks = self.vector_store.search_scored(goal_text, employee.department_id, top_k=2)
         top_chunk = scored_chunks[0].chunk if scored_chunks else None
         top_score = scored_chunks[0].score if scored_chunks else None
 
@@ -412,23 +452,80 @@ class GoalEngine:
         achievability_score: Optional[float] = None
         if achievability.similar_goals_found >= 2:
             base = 0.78 if ("за счет" in goal_text.lower() or "на основе" in goal_text.lower()) else 0.61
-            if achievability.similar_goals_found >= 2:
-                base = max(base, 0.70)
+            base = max(base, 0.70)
             if not achievability.is_achievable:
                 base = min(base, 0.50)
             achievability_score = base
 
-        breakdown = self._smart_breakdown(
+        # ── LLM-based SMART evaluation (richer, semantic) ────────────
+        score_explanations: Optional[dict] = None
+        rag_context_eval: Optional[str] = None
+        if scored_chunks:
+            rag_context_eval = "\n".join(
+                f"[{sc.chunk.doc_type}: {sc.chunk.title}] {sc.chunk.text}"
+                for sc in scored_chunks[:2]
+            )
+        kpi_context = self._build_kpi_context(employee.department_id)
+
+        llm_eval = self.llm.evaluate_smart(
             goal_text,
             role_name=position.name if position else "",
             department_name=department.name if department else "",
-            top_chunk=top_chunk,
-            achievability_score=achievability_score,
+            rag_context=rag_context_eval,
+            kpi_context=kpi_context,
         )
+
+        if llm_eval:
+            # Use LLM scores, but guard Achievable with historical data if available
+            achievable_llm = llm_eval.get("achievable", 0.6)
+            if achievability_score is not None:
+                # Blend LLM achievability with historical signal
+                achievable_llm = round((achievable_llm + achievability_score) / 2, 2)
+            breakdown = SmartBreakdown(
+                specific=round(llm_eval.get("specific", 0.5), 2),
+                measurable=round(llm_eval.get("measurable", 0.5), 2),
+                achievable=round(achievable_llm, 2),
+                relevant=round(llm_eval.get("relevant", 0.5), 2),
+                timebound=round(llm_eval.get("timebound", 0.5), 2),
+            )
+            score_explanations = {
+                "specific": llm_eval.get("specific_why", ""),
+                "measurable": llm_eval.get("measurable_why", ""),
+                "achievable": llm_eval.get("achievable_why", ""),
+                "relevant": llm_eval.get("relevant_why", ""),
+                "timebound": llm_eval.get("timebound_why", ""),
+            }
+        else:
+            # Rule-based fallback
+            breakdown = self._smart_breakdown(
+                goal_text,
+                role_name=position.name if position else "",
+                department_name=department.name if department else "",
+                top_chunk=top_chunk,
+                achievability_score=achievability_score,
+            )
+
         overall = round(safe_mean([breakdown.specific, breakdown.measurable, breakdown.achievable, breakdown.relevant, breakdown.timebound]), 2)
         alignment = self._alignment_level(goal_text, top_chunk)
         goal_type = self._goal_type(goal_text)
         recs = self._recommendations(breakdown, goal_text)
+
+        # Enrich recommendations with LLM criterion explanations for weak scores
+        if score_explanations:
+            threshold = 0.65
+            criteria_map = {
+                "specific": ("S (конкретность)", breakdown.specific),
+                "measurable": ("M (измеримость)", breakdown.measurable),
+                "achievable": ("A (достижимость)", breakdown.achievable),
+                "relevant": ("R (релевантность)", breakdown.relevant),
+                "timebound": ("T (срок)", breakdown.timebound),
+            }
+            for key, (label, score) in criteria_map.items():
+                why = score_explanations.get(key, "")
+                if score < threshold and why:
+                    recs = [r for r in recs if label[:10] not in r]  # dedup
+                    recs.insert(0, f"{label}: {why}")
+
         rewrite = self.rewrite_goal(employee_id, goal_text, quarter, year)
         source = self._build_source(top_chunk, goal_text, search_score=top_score)
 
@@ -446,6 +543,7 @@ class GoalEngine:
             source=source,
             achievability=achievability,
             okr_mapping=okr_mapping,
+            score_explanations=score_explanations,
         )
         self._eval_cache[cache_key] = result
         return result
@@ -460,10 +558,28 @@ class GoalEngine:
         retrieval_query = " ".join(filter(None, [position.name if position else "", dept.name if dept else "", focus or "", manager.full_name if manager else ""]))
 
         # §4.2: Enrich retrieval query with KPI context if available
+        kpi_context_str: Optional[str] = None
         try:
             kpis = self.store.get_kpi_for_department(employee.department_id)
             if kpis:
                 retrieval_query += " " + " ".join(k.name for k in kpis[:5])
+                # Build rich KPI context for LLM: include actual recent values
+                kpi_lines = []
+                for kpi in kpis[:8]:
+                    try:
+                        ts = self.store.get_kpi_timeseries(kpi.id, employee.department_id)
+                        if ts:
+                            latest = ts[-1]
+                            kpi_lines.append(
+                                f"- {kpi.name} ({kpi.id}): {round(latest.value, 2)} {kpi.unit}"
+                                f" — {kpi.description} (данные за {latest.period})"
+                            )
+                        else:
+                            kpi_lines.append(f"- {kpi.name} ({kpi.id}): {kpi.description}")
+                    except Exception:
+                        kpi_lines.append(f"- {kpi.name}: {kpi.description}")
+                if kpi_lines:
+                    kpi_context_str = "Текущие KPI подразделения (используй эти значения как целевые ориентиры):\n" + "\n".join(kpi_lines)
         except Exception:
             pass
 
@@ -488,6 +604,9 @@ class GoalEngine:
                 f"[{c.doc_type}: {c.title}] {c.text}"
                 + (f" (ключевые слова: {kw_str})" if kw_str else "")
             )
+        # Append KPI context into RAG context for LLM generation
+        if kpi_context_str:
+            rag_parts.append(kpi_context_str)
         rag_context = "\n".join(rag_parts) if rag_parts else None
 
         # Gather manager goals for context

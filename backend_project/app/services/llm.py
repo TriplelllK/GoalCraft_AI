@@ -65,6 +65,58 @@ _SYSTEM_REWRITER = """\
 Верни ТОЛЬКО переписанную цель, без пояснений.
 """
 
+_SYSTEM_SMART_EVALUATOR = """\
+Ты — эксперт по оценке качества целей сотрудников (Performance Management) в ИТ-компании.
+
+Оцени цель сотрудника по методологии SMART. Каждый критерий — от 0.0 до 1.0:
+
+S — Specific (конкретность):
+  0.9-1.0: конкретный глагол + объект + система/процесс, нет размытости
+  0.6-0.8: есть глагол и объект, но частично размыто
+  0.3-0.5: глагол есть, объект нечёткий или слишком общий
+  0.1-0.2: нет глагола действия, цель как декларация намерений
+
+M — Measurable (измеримость):
+  0.9-1.0: конкретный числовой KPI (%, часы, кол-во, уровень SLA)
+  0.6-0.8: есть метрика, но неточная или без базового значения
+  0.3-0.5: намёк на измеримость, но числа нет
+  0.1-0.2: полное отсутствие метрики
+
+A — Achievable (достижимость):
+  0.9-1.0: реалистична для роли, есть механизм "за счет" или "путём"
+  0.6-0.8: достижима, но механизм не указан
+  0.3-0.5: цель перегружена (3+ задачи) или метрика завышена
+  0.1-0.2: нереалистичная метрика (100x рост, 100% покрытие без контекста)
+
+R — Relevant (релевантность):
+  0.9-1.0: явная связь с KPI подразделения, стратегией или документом
+  0.6-0.8: связь с ролью прослеживается, но KPI/стратегия не названы
+  0.3-0.5: частичная связь с функцией подразделения
+  0.1-0.2: не понятно зачем эта цель для данной роли/подразделения
+
+T — Time-bound (ограниченность по времени):
+  0.9-1.0: конкретная дата или "до конца Qx YYYY"
+  0.6-0.8: квартал указан без точной даты
+  0.3-0.5: "в течение года", "ежемесячно" — нечёткий горизонт
+  0.1-0.2: срок не указан совсем
+
+Если в контексте указаны RAG-фрагменты ВНД/стратегии или KPI подразделения — используй их для оценки релевантности.
+
+Верни СТРОГО JSON (без markdown, без ```):
+{
+  "specific": 0.85,
+  "specific_why": "Кратко на русском: что хорошо или плохо с конкретностью",
+  "measurable": 0.72,
+  "measurable_why": "...",
+  "achievable": 0.68,
+  "achievable_why": "...",
+  "relevant": 0.80,
+  "relevant_why": "...",
+  "timebound": 0.91,
+  "timebound_why": "..."
+}
+"""
+
 _SYSTEM_OKR_MAPPER = """\
 Ты — эксперт по OKR (Objectives & Key Results) в области HR и управления персоналом.
 Проанализируй цель сотрудника и определи:
@@ -209,6 +261,49 @@ class LLMService:
         user_prompt = "\n".join(context_parts)
         result = self._chat(_SYSTEM_REWRITER, user_prompt, temperature=0.5)
         return result if result and len(result) > 20 else None
+
+    def evaluate_smart(
+        self,
+        goal_text: str,
+        role_name: str,
+        department_name: str,
+        rag_context: Optional[str] = None,
+        kpi_context: Optional[str] = None,
+    ) -> Optional[dict]:
+        """Evaluate a goal with LLM using SMART criteria. Returns dict with scores + explanations."""
+        if not self.is_enabled:
+            return None
+
+        context_parts = [
+            f"Цель сотрудника: {goal_text}",
+            f"Должность: {role_name}",
+            f"Подразделение: {department_name}",
+        ]
+        if kpi_context:
+            context_parts.append(f"KPI подразделения:\n{kpi_context}")
+        if rag_context:
+            context_parts.append(f"Релевантные фрагменты ВНД/стратегии:\n{rag_context}")
+
+        user_prompt = "\n".join(context_parts)
+        result = self._chat(_SYSTEM_SMART_EVALUATOR, user_prompt, temperature=0.1, max_tokens=512)
+        if not result:
+            return None
+
+        try:
+            if "```" in result:
+                result = result.split("```")[1]
+                if result.startswith("json"):
+                    result = result[4:]
+                result = result.strip()
+            data = json.loads(result)
+            # Clamp scores to [0.0, 1.0]
+            for key in ("specific", "measurable", "achievable", "relevant", "timebound"):
+                if key in data:
+                    data[key] = max(0.0, min(1.0, float(data[key])))
+            return data
+        except (json.JSONDecodeError, ValueError, KeyError):
+            logger.warning("Failed to parse SMART eval JSON from LLM: %s", result[:200])
+            return None
 
     def map_to_okr(self, goal_text: str, department_context: str = "") -> Optional[dict]:
         """Map a goal to OKR framework using LLM. Returns None if unavailable."""

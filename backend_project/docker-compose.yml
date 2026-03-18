@@ -1,15 +1,40 @@
 services:
+  # ── Backend API ──────────────────────────────────────────────────
   api:
-    build: .
-    env_file:
-      - .env.example
+    build:
+      context: ..                          # Root of kumkol_hr_project
+      dockerfile: backend_project/Dockerfile
+    environment:
+      APP_TITLE: GoalCraft AI
+      CORS_ORIGINS: "*"
+      # ── PostgreSQL ──
+      STORAGE_BACKEND: postgres
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: hr_goal_ai
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_AUTO_INIT: "true"
+      # ── Qdrant ──
+      VECTOR_BACKEND: qdrant
+      QDRANT_URL: http://qdrant:6333
+      VECTOR_COLLECTION: hr_goals
+      VECTOR_SIZE: "256"
+      # ── LLM (OpenAI) ──
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: gpt-4o-mini
     ports:
-      - "8000:8000"
+      - "8080:8000"
     depends_on:
-      - postgres
-      - qdrant
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
     volumes:
-      - ./data:/app/data  # Place organizer's .sql dump here
+      - ./data:/app/data
+    restart: unless-stopped
+
+  # ── PostgreSQL ──────────────────────────────────────────────────
   postgres:
     image: postgres:17
     environment:
@@ -18,10 +43,17 @@ services:
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d hr_goal_ai"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     volumes:
       - postgres_data:/var/lib/postgresql/data
-      - ./data:/data                                          # Dump files accessible inside container
-      - ./scripts/init_db.sh:/docker-entrypoint-initdb.d/01_restore.sh  # Auto-restore PGDMP dump
+      - ./data:/data
+      - ./scripts/init_db.sh:/docker-entrypoint-initdb.d/01_restore.sh
+
+  # ── Qdrant Vector DB ────────────────────────────────────────────
   qdrant:
     image: qdrant/qdrant:latest
     ports:
@@ -29,6 +61,22 @@ services:
     volumes:
       - qdrant_data:/qdrant/storage
 
+  # ── Frontend (Vite dev server) ──────────────────────────────────
+  frontend:
+    image: node:20-slim
+    working_dir: /app
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    command: sh -c "npm install && npx vite --host 0.0.0.0"
+    depends_on:
+      - api
+    environment:
+      VITE_API_URL: http://api:8000
+
 volumes:
   postgres_data:
   qdrant_data:
+  frontend_node_modules:

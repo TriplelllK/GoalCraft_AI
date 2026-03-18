@@ -19,8 +19,12 @@ export function EmployeePicker({ value, onChange, label = 'Сотрудник', 
         ? list.filter((e) => list.some((sub) => sub.manager_id === e.id))
         : list;
       setEmployees(filtered);
+      // Auto-select first employee if current value is not in the list
+      if (filtered.length && !filtered.some((e) => e.id === value)) {
+        onChange(filtered[0].id);
+      }
     }).catch(() => {});
-  }, [managersOnly]);
+  }, [managersOnly]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <label>

@@ -16,7 +16,7 @@ const maturityColor: Record<string, string> = {
 };
 
 export function MaturityPage() {
-  const [departmentId, setDepartmentId] = useState('dep_hr');
+  const [departmentId, setDepartmentId] = useState('');
   const [quarter, setQuarter] = useState('Q2');
   const [year, setYear] = useState(2026);
   const [report, setReport] = useState<MaturityReport | null>(null);

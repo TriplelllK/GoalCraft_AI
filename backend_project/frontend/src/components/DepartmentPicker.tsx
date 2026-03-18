@@ -12,8 +12,14 @@ export function DepartmentPicker({ value, onChange, label = 'Подраздел�
   const [departments, setDepartments] = useState<DepartmentRef[]>([]);
 
   useEffect(() => {
-    api.listDepartments().then(setDepartments).catch(() => {});
-  }, []);
+    api.listDepartments().then((list) => {
+      setDepartments(list);
+      // Auto-select first department if current value is not in the list
+      if (list.length && !list.some((d) => d.id === value)) {
+        onChange(list[0].id);
+      }
+    }).catch(() => {});
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <label>
