@@ -42,7 +42,7 @@ from app.services.rules import (
     safe_mean,
     specificity_quality_score,
 )
-from app.vector.memory_vector import ChunkRecord
+from app.vector.memory_vector import ChunkRecord, ScoredChunk
 from app.services.llm import get_llm_service
 
 
@@ -92,15 +92,16 @@ class GoalEngine:
             kpi_catalog_count=kpi_count,
         )
 
-    def _build_source(self, chunk: Optional[ChunkRecord], query: str) -> Optional[SourceEvidence]:
+    def _build_source(self, chunk: Optional[ChunkRecord], query: str, search_score: Optional[float] = None) -> Optional[SourceEvidence]:
         if not chunk:
             return None
+        score = search_score if search_score is not None else round(overlap_ratio(query, chunk.text), 4)
         return SourceEvidence(
             doc_id=chunk.doc_id,
             title=chunk.title,
             doc_type=chunk.doc_type,
             fragment=chunk.text,
-            score=round(overlap_ratio(query, chunk.text), 4),
+            score=round(score, 4),
         )
 
     def _build_okr_mapping(self, goal_text: str, department_name: str) -> Optional[OkrMapping]:
@@ -272,8 +273,15 @@ class GoalEngine:
         role_name = (position.name if position else "").lower()
 
         # Try LLM rewrite first (richer, more natural language)
-        top_chunks = self.vector_store.search(goal_text, employee.department_id, top_k=1)
-        rag_context = top_chunks[0].text if top_chunks else None
+        scored_chunks = self.vector_store.search_scored(goal_text, employee.department_id, top_k=2)
+        rag_context = None
+        if scored_chunks:
+            # Include title + doc_type for richer LLM context
+            parts = []
+            for sc in scored_chunks[:2]:
+                parts.append(f"[{sc.chunk.doc_type}: {sc.chunk.title}] {sc.chunk.text}")
+            rag_context = "\n".join(parts)
+
         llm_rewrite = self.llm.rewrite_goal(
             goal_text,
             role_name=position.name if position else "",
@@ -285,10 +293,10 @@ class GoalEngine:
         if llm_rewrite:
             return llm_rewrite
 
-        # Rule-based fallback (deterministic template)
+        # Rule-based fallback (deterministic template) — improved to avoid doubling
         hints = ROLE_METRIC_HINTS.get(role_name, {
             "metric": "согласованный KPI подразделения не ниже 90%",
-            "business": "за счет стандартизации процесса и контроля исполнения",
+            "business": "стандартизации процесса и контроля исполнения",
         })
         deadline = QUARTER_END_HINT.get(quarter, "до конца квартала")
         text = goal_text.strip().rstrip(".")
@@ -296,10 +304,15 @@ class GoalEngine:
             text = f"обеспечить {text[:1].lower() + text[1:]}" if text else "обеспечить достижение целевого показателя"
         if not has_time_bound(text):
             text = f"{deadline} {text}"
-        if not has_measurement(text) or "с достижением показателя" not in text.lower():
+        if not has_measurement(text):
             text = f"{text} с достижением показателя: {hints['metric']}"
-        if "за счет" not in text.lower():
-            text = f"{text} за счет {hints['business']}"
+        # Fix: only add "за счет" if not already present (prevents doubling)
+        if "за счет" not in text.lower() and "на основе" not in text.lower():
+            business = hints["business"]
+            # Remove leading "за счет" from the hint itself if present
+            if business.lower().startswith("за счет "):
+                business = business[8:]
+            text = f"{text} за счет {business}"
         return text[:1].upper() + text[1:]
 
     def _check_achievability(self, goal_text: str, employee_id: str, quarter: str, year: int) -> AchievabilityCheck:
@@ -382,8 +395,9 @@ class GoalEngine:
             raise ValueError("employee not found")
         department = self.store.get_department(employee.department_id)
         position = self.store.get_position(employee.position_id)
-        top_chunks = self.vector_store.search(goal_text, employee.department_id, top_k=1)
-        top_chunk = top_chunks[0] if top_chunks else None
+        scored_chunks = self.vector_store.search_scored(goal_text, employee.department_id, top_k=1)
+        top_chunk = scored_chunks[0].chunk if scored_chunks else None
+        top_score = scored_chunks[0].score if scored_chunks else None
 
         # F-20: achievability check from historical data
         achievability = self._check_achievability(goal_text, employee_id, quarter, year)
@@ -410,7 +424,7 @@ class GoalEngine:
         goal_type = self._goal_type(goal_text)
         recs = self._recommendations(breakdown, goal_text)
         rewrite = self.rewrite_goal(employee_id, goal_text, quarter, year)
-        source = self._build_source(top_chunk, goal_text)
+        source = self._build_source(top_chunk, goal_text, search_score=top_score)
 
         # OKR mapping via LLM (graceful degradation → rule-based fallback)
         okr_mapping = self._build_okr_mapping(goal_text, department.name if department else "")
@@ -453,10 +467,20 @@ class GoalEngine:
         except Exception:
             pass
 
-        top_chunks = self.vector_store.search(retrieval_query, employee.department_id, top_k=max(count, 3))
+        scored_results = self.vector_store.search_scored(retrieval_query, employee.department_id, top_k=max(count, 5))
+        top_chunks = [sc.chunk for sc in scored_results]
+        top_scores = {sc.chunk.chunk_id: sc.score for sc in scored_results}
 
-        # Build RAG context from retrieved chunks
-        rag_context = "\n".join(f"[{c.doc_type}] {c.text}" for c in top_chunks[:3]) if top_chunks else None
+        # Build enriched RAG context from retrieved chunks (include doc metadata)
+        rag_parts: list[str] = []
+        for sc in scored_results[:4]:
+            c = sc.chunk
+            kw_str = ", ".join(c.keywords) if c.keywords else ""
+            rag_parts.append(
+                f"[{c.doc_type}: {c.title}] {c.text}"
+                + (f" (ключевые слова: {kw_str})" if kw_str else "")
+            )
+        rag_context = "\n".join(rag_parts) if rag_parts else None
 
         # Gather manager goals for context
         manager_goals_text: list[str] = []
@@ -491,12 +515,22 @@ class GoalEngine:
                     continue  # Skip duplicate goals
 
                 source_chunk = top_chunks[idx % len(top_chunks)] if top_chunks else None
+                source_score = top_scores.get(source_chunk.chunk_id, 0.0) if source_chunk else None
                 eval_result = self.evaluate_goal(employee_id, title, quarter, year)
                 # Auto-rewrite if SMART score is too low
                 final_title = title
                 if eval_result.overall_score < 0.7:
                     final_title = self.rewrite_goal(employee_id, title, quarter, year)
                     eval_result = self.evaluate_goal(employee_id, final_title, quarter, year)
+
+                # Build detailed rationale citing source documents
+                rationale_parts = [f"Цель сгенерирована ИИ на основе роли ({position.name if position else 'N/A'})"]
+                if source_chunk:
+                    rationale_parts.append(f"документа «{source_chunk.title}» ({source_chunk.doc_type})")
+                if manager_goals_text:
+                    rationale_parts.append("целей руководителя")
+                rationale = ", ".join(rationale_parts) + "."
+
                 results.append(
                     GeneratedGoal(
                         title=final_title,
@@ -504,9 +538,8 @@ class GoalEngine:
                         alignment_level=eval_result.alignment_level,
                         goal_type=eval_result.goal_type,
                         methodology="SMART+OKR (LLM)",
-                        rationale=f"Цель сгенерирована ИИ на основе роли ({position.name if position else 'N/A'}), "
-                                  f"стратегических документов и целей руководителя.",
-                        source=self._build_source(source_chunk, final_title) or SourceEvidence(
+                        rationale=rationale,
+                        source=self._build_source(source_chunk, final_title, search_score=source_score) or SourceEvidence(
                             doc_id="N/A",
                             title="LLM-generated",
                             doc_type="llm",
@@ -517,19 +550,60 @@ class GoalEngine:
                 )
             return results[:count]
 
-        # ── Fallback: deterministic templates ──
+        # ── Fallback: expanded role-aware + RAG-aware templates ──
         hints = ROLE_METRIC_HINTS.get((position.name if position else "").lower(), {
             "metric": "согласованный KPI подразделения не ниже 90%",
-            "business": "за счет стандартизации процесса и контроля исполнения",
+            "business": "стандартизации процесса и контроля исполнения",
         })
         deadline = QUARTER_END_HINT.get(quarter, "до конца квартала")
+
+        # Extract keywords from top RAG chunks for template enrichment
+        rag_keywords: list[str] = []
+        rag_doc_titles: list[str] = []
+        for c in top_chunks[:3]:
+            rag_keywords.extend(c.keywords)
+            rag_doc_titles.append(c.title)
+
+        # Core templates (always available)
         templates = [
+            f"{deadline} обеспечить {hints['metric']} за счет {hints.get('business', 'системной работы с показателями')}.",
             f"{deadline} сократить средний срок согласования HR-заявок с 5 до 3 рабочих дней за счет цифровизации маршрута согласования.",
-            f"{deadline} обеспечить {hints['metric']} за счет {hints['business']}.",
             f"{deadline} внедрить дашборд по статусу целей и обязательному обучению с еженедельным обновлением показателей.",
             f"{deadline} снизить долю просроченных обучений ниже 3% за счет автоматизации напоминаний и контроля статусов.",
             f"{deadline} повысить долю стратегически связанных целей сотрудников не ниже 80% на основе ВНД, KPI и целей руководителя.",
         ]
+
+        # RAG-enriched templates: incorporate document context
+        if rag_keywords:
+            kw_sample = rag_keywords[:2]
+            if "обучение" in rag_keywords or "компетенции" in rag_keywords:
+                templates.append(f"{deadline} обеспечить прохождение обязательного обучения не менее 97% сотрудников за счет автоматизации контроля и напоминаний.")
+            if "цифровизация" in rag_keywords or "HR" in rag_keywords:
+                templates.append(f"{deadline} перевести не менее 3 ручных HR-процессов в цифровой формат за счет внедрения автоматизации и стандартизации workflow.")
+            if "KPI" in rag_keywords or "цели" in rag_keywords:
+                templates.append(f"{deadline} довести долю целей с привязкой к KPI подразделения до 90% за счет регулярных калибровочных сессий с руководителями.")
+            if any(kw in rag_keywords for kw in ["подбор", "вакансии", "адаптация"]):
+                templates.append(f"{deadline} сократить средний срок закрытия вакансий до 25 рабочих дней за счет оптимизации воронки подбора и автоматизации скрининга.")
+            if any(kw in rag_keywords for kw in ["текучесть", "eNPS", "таланты"]):
+                templates.append(f"{deadline} снизить текучесть ключевых сотрудников ниже 8% за счет программы удержания и развития карьерных треков.")
+            if any(kw in rag_keywords for kw in ["компенсации", "бонусы", "ФОТ"]):
+                templates.append(f"{deadline} обеспечить отклонение ФОТ от бюджета не более 3% за счет ежемесячного контроля и автоматизации расчётов.")
+            if any(kw in rag_keywords for kw in ["оценка", "performance review", "калибровка"]):
+                templates.append(f"{deadline} провести калибровочные сессии для 100% подразделений с формированием индивидуальных планов развития по итогам оценки.")
+            if any(kw in rag_keywords for kw in ["безопасность", "персональные данные", "аудит"]):
+                templates.append(f"{deadline} обеспечить прохождение обучения по информационной безопасности 100% сотрудников HR за счет интеграции с LMS и автоматических напоминаний.")
+
+        # Role-specific bonus templates
+        role_lower = (position.name if position else "").lower()
+        if "recruiter" in role_lower:
+            templates.append(f"{deadline} увеличить долю кандидатов из реферальной программы до 20% за счет запуска программы мотивации рекомендателей.")
+        elif "analyst" in role_lower:
+            templates.append(f"{deadline} автоматизировать не менее 80% регулярных HR-отчётов за счет настройки дашбордов и интеграции с HRIS.")
+        elif "director" in role_lower:
+            templates.append(f"{deadline} обеспечить каскадирование стратегических целей на 100% ключевых руководителей за счет проведения стратегических сессий и мониторинга привязки целей.")
+        elif "project manager" in role_lower or "it" in role_lower:
+            templates.append(f"{deadline} обеспечить выполнение SLA по HR-проектам не ниже 95% за счет внедрения Agile-спринтов и еженедельных ретроспектив.")
+
         results = []
         for idx in range(len(templates)):
             if len(results) >= count:
@@ -542,7 +616,15 @@ class GoalEngine:
             if any(overlap_ratio(title, r.title) >= 0.65 for r in results):
                 continue
             source_chunk = top_chunks[idx % len(top_chunks)] if top_chunks else None
+            source_score = top_scores.get(source_chunk.chunk_id, 0.0) if source_chunk else None
             eval_result = self.evaluate_goal(employee_id, title, quarter, year)
+
+            # Build rationale citing specific documents
+            rationale = f"Цель сформирована на основе роли «{position.name if position else 'N/A'}»"
+            if source_chunk:
+                rationale += f", документа «{source_chunk.title}» ({source_chunk.doc_type})"
+            rationale += " и приоритетов квартала."
+
             results.append(
                 GeneratedGoal(
                     title=title,
@@ -550,8 +632,8 @@ class GoalEngine:
                     alignment_level=eval_result.alignment_level,
                     goal_type=eval_result.goal_type,
                     methodology="SMART (rule-based)",
-                    rationale="Цель сформирована на основе роли сотрудника, приоритета квартала и найденных фрагментов ВНД/стратегии.",
-                    source=self._build_source(source_chunk, title) or SourceEvidence(
+                    rationale=rationale,
+                    source=self._build_source(source_chunk, title, search_score=source_score) or SourceEvidence(
                         doc_id="N/A",
                         title="Synthetic source",
                         doc_type="synthetic",

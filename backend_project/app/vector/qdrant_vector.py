@@ -10,7 +10,7 @@ import requests
 
 from app.models.schemas import Document
 from app.services.rules import chunk_text, overlap_ratio, tokenize
-from app.vector.memory_vector import ChunkRecord
+from app.vector.memory_vector import ChunkRecord, ScoredChunk
 
 
 @dataclass
@@ -186,3 +186,8 @@ class QdrantVectorStore:
             scored.append((final_score, record))
         scored.sort(key=lambda item: item[0], reverse=True)
         return [item[1] for item in scored[:top_k]]
+
+    def search_scored(self, query: str, department_id: Optional[str] = None, top_k: int = 5) -> list[ScoredChunk]:
+        """Search returning ScoredChunk for compatibility with enhanced engine."""
+        results = self.search(query, department_id, top_k)
+        return [ScoredChunk(chunk=r, score=r.vector_score) for r in results]

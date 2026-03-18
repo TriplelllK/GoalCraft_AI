@@ -17,35 +17,35 @@ QUARTER_END_HINT: dict[str, str] = {
 ROLE_METRIC_HINTS: dict[str, dict[str, str]] = {
     "hr business partner": {
         "metric": "доля целей, привязанных к KPI подразделения, не ниже 85%",
-        "business": "за счет систематического согласования целей с руководителями подразделений",
+        "business": "систематического согласования целей с руководителями подразделений",
     },
     "learning and development specialist": {
         "metric": "доля сотрудников, прошедших обязательное обучение, не ниже 97%",
-        "business": "за счет автоматизации напоминаний и еженедельного контроля статусов",
+        "business": "автоматизации напоминаний и еженедельного контроля статусов",
     },
     "production manager": {
         "metric": "снижение удельных операционных затрат на 5%",
-        "business": "за счет оптимизации производственного планирования и цифровизации процессов",
+        "business": "оптимизации производственного планирования и цифровизации процессов",
     },
     "compensation and benefits specialist": {
         "metric": "доля ошибок в расчёте бонусов ниже 2%",
-        "business": "за счет автоматизации проверки данных и стандартизации процедур расчёта",
+        "business": "автоматизации проверки данных и стандартизации процедур расчёта",
     },
     "recruiter": {
         "metric": "средний срок закрытия вакансий не более 30 рабочих дней",
-        "business": "за счет оптимизации воронки подбора и автоматизации скрининга кандидатов",
+        "business": "оптимизации воронки подбора и автоматизации скрининга кандидатов",
     },
     "hr analyst": {
         "metric": "доля автоматизированных HR-отчётов не менее 80%",
-        "business": "за счет внедрения дашбордов и автоматизации сбора данных из HR-систем",
+        "business": "внедрения дашбордов и автоматизации сбора данных из HR-систем",
     },
     "hr director": {
         "metric": "рост доли стратегически связанных целей сотрудников не ниже 80%",
-        "business": "за счет каскадирования целей и систематической калибровки с руководителями",
+        "business": "каскадирования целей и систематической калибровки с руководителями",
     },
     "it project manager": {
         "metric": "выполнение SLA по HR-проектам не ниже 95%",
-        "business": "за счет внедрения методологии Agile и регулярного контроля спринтов",
+        "business": "внедрения методологии Agile и регулярного контроля спринтов",
     },
 }
 
@@ -309,19 +309,77 @@ def safe_mean(values: Sequence[float]) -> float:
 # ── Chunking ─────────────────────────────────────────────────────────
 
 
+_SENTENCE_RE = re.compile(r"(?<=[.!?;])\s+")
+
+
+def _split_sentences(text: str) -> list[str]:
+    """Split text into sentences, preserving short fragments."""
+    parts = _SENTENCE_RE.split(text.strip())
+    return [p.strip() for p in parts if p.strip()]
+
+
 def chunk_text(content: str, max_chunk: int = 300, overlap: int = 50) -> list[str]:
-    """Split text into overlapping chunks of approximately max_chunk characters."""
+    """Split text into overlapping, sentence-aware chunks.
+
+    Improved: respects sentence boundaries so chunks never cut mid-sentence.
+    Falls back to character-based splitting only for very long sentences.
+    """
     content = content.strip()
     if not content:
         return []
     if len(content) <= max_chunk:
         return [content]
+
+    sentences = _split_sentences(content)
+    if not sentences:
+        return [content]
+
     chunks: list[str] = []
-    start = 0
-    while start < len(content):
-        end = start + max_chunk
-        chunk = content[start:end].strip()
-        if chunk:
-            chunks.append(chunk)
-        start += max_chunk - overlap
+    current: list[str] = []
+    current_len = 0
+
+    for sent in sentences:
+        sent_len = len(sent)
+        # If single sentence exceeds max_chunk — character-split it
+        if sent_len > max_chunk:
+            # flush current buffer first
+            if current:
+                chunks.append(" ".join(current))
+                current.clear()
+                current_len = 0
+            # character-level split for oversized sentence
+            start = 0
+            while start < sent_len:
+                end = min(start + max_chunk, sent_len)
+                chunks.append(sent[start:end].strip())
+                start += max_chunk - overlap
+            continue
+
+        # Would adding this sentence exceed limit?
+        if current_len + sent_len + (1 if current else 0) > max_chunk:
+            # flush current chunk
+            if current:
+                chunks.append(" ".join(current))
+            # overlap: keep last sentence(s) from current chunk for context continuity
+            overlap_buf: list[str] = []
+            overlap_len = 0
+            for s in reversed(current):
+                if overlap_len + len(s) > overlap:
+                    break
+                overlap_buf.insert(0, s)
+                overlap_len += len(s) + 1
+            current = overlap_buf + [sent]
+            current_len = sum(len(s) for s in current) + len(current) - 1
+        else:
+            current.append(sent)
+            current_len += sent_len + (1 if len(current) > 1 else 0)
+
+    if current:
+        text = " ".join(current)
+        # avoid tiny trailing chunks — merge with last if possible
+        if chunks and len(text) < overlap and len(chunks[-1]) + len(text) + 1 <= max_chunk * 1.2:
+            chunks[-1] = chunks[-1] + " " + text
+        else:
+            chunks.append(text)
+
     return chunks
