@@ -1,0 +1,247 @@
+{
+  "total": 34,
+  "passed": 34,
+  "failed": 0,
+  "pass_rate": "100.0%",
+  "duration_s": 8.82,
+  "results": [
+    {
+      "name": "vite_serves_html",
+      "page": "index",
+      "passed": true,
+      "duration_ms": 4099.2,
+      "detail": ""
+    },
+    {
+      "name": "vite_proxy_health",
+      "page": "index",
+      "passed": true,
+      "duration_ms": 4088.1,
+      "detail": ""
+    },
+    {
+      "name": "backend_direct_health",
+      "page": "index",
+      "passed": true,
+      "duration_ms": 13.0,
+      "detail": ""
+    },
+    {
+      "name": "notifications_api",
+      "page": "Layout",
+      "passed": true,
+      "duration_ms": 53.1,
+      "detail": ""
+    },
+    {
+      "name": "departments_list",
+      "page": "Layout",
+      "passed": true,
+      "duration_ms": 19.1,
+      "detail": ""
+    },
+    {
+      "name": "employees_list",
+      "page": "Layout",
+      "passed": true,
+      "duration_ms": 15.7,
+      "detail": ""
+    },
+    {
+      "name": "employee_context",
+      "page": "EvaluatePage",
+      "passed": true,
+      "duration_ms": 22.1,
+      "detail": ""
+    },
+    {
+      "name": "evaluate_goal",
+      "page": "EvaluatePage",
+      "passed": true,
+      "duration_ms": 4.2,
+      "detail": ""
+    },
+    {
+      "name": "evaluate_goal_achievability",
+      "page": "EvaluatePage",
+      "passed": true,
+      "duration_ms": 25.9,
+      "detail": ""
+    },
+    {
+      "name": "evaluate_goal_okr",
+      "page": "EvaluatePage",
+      "passed": true,
+      "duration_ms": 20.8,
+      "detail": ""
+    },
+    {
+      "name": "evaluate_batch",
+      "page": "EvaluatePage",
+      "passed": true,
+      "duration_ms": 45.2,
+      "detail": ""
+    },
+    {
+      "name": "rewrite_goal",
+      "page": "EvaluatePage",
+      "passed": true,
+      "duration_ms": 16.1,
+      "detail": ""
+    },
+    {
+      "name": "generate_goals",
+      "page": "GeneratePage",
+      "passed": true,
+      "duration_ms": 10.7,
+      "detail": ""
+    },
+    {
+      "name": "generate_goals_5",
+      "page": "GeneratePage",
+      "passed": true,
+      "duration_ms": 7.2,
+      "detail": ""
+    },
+    {
+      "name": "cascade_goals",
+      "page": "CascadePage",
+      "passed": true,
+      "duration_ms": 24.0,
+      "detail": ""
+    },
+    {
+      "name": "dashboard_overview",
+      "page": "DashboardPage",
+      "passed": true,
+      "duration_ms": 27.4,
+      "detail": ""
+    },
+    {
+      "name": "department_snapshot",
+      "page": "DashboardPage",
+      "passed": true,
+      "duration_ms": 15.3,
+      "detail": ""
+    },
+    {
+      "name": "data_stats",
+      "page": "DashboardPage",
+      "passed": true,
+      "duration_ms": 16.0,
+      "detail": ""
+    },
+    {
+      "name": "department_404",
+      "page": "DashboardPage",
+      "passed": true,
+      "duration_ms": 22.7,
+      "detail": ""
+    },
+    {
+      "name": "maturity_report",
+      "page": "MaturityPage",
+      "passed": true,
+      "duration_ms": 23.2,
+      "detail": ""
+    },
+    {
+      "name": "maturity_all_departments",
+      "page": "MaturityPage",
+      "passed": true,
+      "duration_ms": 86.2,
+      "detail": ""
+    },
+    {
+      "name": "employees_filter_department",
+      "page": "EmployeePicker",
+      "passed": true,
+      "duration_ms": 31.7,
+      "detail": ""
+    },
+    {
+      "name": "employee_context_404",
+      "page": "EmployeePicker",
+      "passed": true,
+      "duration_ms": 14.8,
+      "detail": ""
+    },
+    {
+      "name": "evaluate_empty_goal",
+      "page": "EvaluatePage",
+      "passed": true,
+      "duration_ms": 16.8,
+      "detail": ""
+    },
+    {
+      "name": "evaluate_very_long_goal",
+      "page": "EvaluatePage",
+      "passed": true,
+      "duration_ms": 35.2,
+      "detail": ""
+    },
+    {
+      "name": "generate_nonexistent_employee",
+      "page": "GeneratePage",
+      "passed": true,
+      "duration_ms": 25.0,
+      "detail": ""
+    },
+    {
+      "name": "batch_empty_goals",
+      "page": "EvaluatePage",
+      "passed": true,
+      "duration_ms": 2.7,
+      "detail": ""
+    },
+    {
+      "name": "build_index_html_exists",
+      "page": "Build",
+      "passed": true,
+      "duration_ms": 0.3,
+      "detail": ""
+    },
+    {
+      "name": "build_assets_exist",
+      "page": "Build",
+      "passed": true,
+      "duration_ms": 0.4,
+      "detail": ""
+    },
+    {
+      "name": "build_js_bundle_valid",
+      "page": "Build",
+      "passed": true,
+      "duration_ms": 10.9,
+      "detail": ""
+    },
+    {
+      "name": "build_css_valid",
+      "page": "Build",
+      "passed": true,
+      "duration_ms": 0.3,
+      "detail": ""
+    },
+    {
+      "name": "vite_proxy_config",
+      "page": "Build",
+      "passed": true,
+      "duration_ms": 0.2,
+      "detail": ""
+    },
+    {
+      "name": "goal_history",
+      "page": "GoalHistory",
+      "passed": true,
+      "duration_ms": 16.3,
+      "detail": ""
+    },
+    {
+      "name": "ingest_documents",
+      "page": "Admin",
+      "passed": true,
+      "duration_ms": 7.3,
+      "detail": ""
+    }
+  ]
+}
